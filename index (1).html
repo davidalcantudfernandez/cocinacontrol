@@ -890,6 +890,41 @@ async function saveInventarioToCloud(registros) {
 </div>
 
 
+
+<!-- MODAL EDITAR USUARIO -->
+<div class="modal-overlay" id="userModal" onclick="closeUserModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">✏️ Editar usuario</div>
+    <input type="hidden" id="editUserId" />
+    <div class="form-row">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="modal-user-name" placeholder="Nombre" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="modal-user-pass" placeholder="Contraseña" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Rol</label>
+      <select class="form-select" id="modal-user-role">
+        <option value="cocina">🍳 Cocina</option>
+        <option value="sala">🍷 Sala</option>
+        <option value="admin">👑 Admin</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Restaurante</label>
+      <select class="form-select" id="modal-user-resto">
+        <option value="1">🏠 Ravatxol</option>
+        <option value="2">🏡 Tabalet</option>
+        <option value="0">Ambos (Admin)</option>
+      </select>
+    </div>
+    <button class="submit-btn" onclick="saveUserModal()" style="margin-top:8px">💾 Guardar cambios</button>
+    <button onclick="closeUserModal()" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
 <!-- PROVEEDORES -->
 <div class="page" id="tab-proveedores">
   <div class="section-title" style="margin-bottom:12px">Gestión de proveedores</div>
@@ -2024,67 +2059,50 @@ function deleteProduct(provId, prodId) {
 function renderUsersList() {
   const el = document.getElementById('usersList');
   if (!el) return;
-  el.innerHTML = USERS.map((u, idx) => `
-    <div class="user-card" style="flex-direction:column;align-items:stretch;gap:0" id="user-card-${idx}">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div class="user-card-info">
-          <div class="user-card-name">${u.name} ${u.isAdmin ? '👑' : ''}</div>
-          <div class="user-card-meta">
-            ${u.isAdmin ? 'Admin · Todos los locales' : `${u.role === 'cocina' ? '🍳 Cocina' : '🍷 Sala'} · ${u.resto === 1 ? 'Ravatxol' : 'Tabalet'}`}
-            · 🔑 ${u.pass}
-          </div>
-        </div>
-        <div style="display:flex;gap:6px">
-          <button style="background:none;border:1.5px solid var(--blue);border-radius:8px;padding:6px 12px;color:var(--blue);font-size:12px;font-family:'Syne',sans-serif;font-weight:700;cursor:pointer" onclick="toggleEditUser(${idx})">✏️ Editar</button>
-          ${!u.isAdmin ? `<button class="user-delete-btn" onclick="deleteUser('${u.id}')">Eliminar</button>` : ''}
+  el.innerHTML = USERS.map((u) => `
+    <div class="user-card">
+      <div class="user-card-info">
+        <div class="user-card-name">${u.name} ${u.isAdmin ? '👑' : ''}</div>
+        <div class="user-card-meta">
+          ${u.isAdmin ? 'Admin · Todos los locales' : (u.role === 'cocina' ? '🍳 Cocina' : '🍷 Sala') + ' · ' + (u.resto === 1 ? 'Ravatxol' : 'Tabalet')}
+          · 🔑 ${u.pass}
         </div>
       </div>
-      <div id="edit-form-${idx}" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
-        <div class="form-row">
-          <label class="form-label">Nombre</label>
-          <input class="form-input" id="edit-name-${idx}" value="${u.name}" />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Contraseña</label>
-          <input class="form-input" id="edit-pass-${idx}" value="${u.pass}" />
-        </div>
-        <div class="form-row">
-          <label class="form-label">Rol</label>
-          <select class="form-select" id="edit-role-${idx}">
-            <option value="cocina" ${u.role==='cocina'?'selected':''}>🍳 Cocina</option>
-            <option value="sala" ${u.role==='sala'?'selected':''}>🍷 Sala</option>
-            <option value="admin" ${u.role==='admin'?'selected':''}>👑 Admin</option>
-          </select>
-        </div>
-        <div class="form-row">
-          <label class="form-label">Restaurante</label>
-          <select class="form-select" id="edit-resto-${idx}">
-            <option value="1" ${u.resto===1?'selected':''}>🏠 Ravatxol</option>
-            <option value="2" ${u.resto===2?'selected':''}>🏡 Tabalet</option>
-            <option value="0" ${!u.resto?'selected':''}>Ambos (Admin)</option>
-          </select>
-        </div>
-        <input type="hidden" id="edit-uid-${idx}" value="${u.id}" />
-        <button class="submit-btn" style="font-size:14px;padding:12px" onclick="saveEditUser(${idx})">💾 Guardar cambios</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="action-btn blue" style="padding:8px 12px" onclick="openUserModal('${u.id}')">✏️</button>
+        ${!u.isAdmin ? `<button class="action-btn red" style="padding:8px 12px" onclick="deleteUser('${u.id}')">🗑️</button>` : ''}
       </div>
     </div>
   `).join('');
 }
 
-function toggleEditUser(idx) {
-  const form = document.getElementById('edit-form-' + idx);
-  if (form) form.style.display = form.style.display === 'none' ? 'block' : 'none';
+function openUserModal(uid) {
+  const user = USERS.find(u => u.id === uid);
+  if (!user) return;
+  document.getElementById('editUserId').value = uid;
+  document.getElementById('modal-user-name').value = user.name;
+  document.getElementById('modal-user-pass').value = user.pass;
+  document.getElementById('modal-user-role').value = user.role || 'cocina';
+  const restoVal = user.resto === null || user.resto === undefined ? '0' : String(user.resto);
+  document.getElementById('modal-user-resto').value = restoVal;
+  document.getElementById('userModal').classList.add('open');
 }
 
-function saveEditUser(idx) {
-  const uid = document.getElementById('edit-uid-' + idx).value;
+function closeUserModal(e) {
+  if (!e || e.target === document.getElementById('userModal') || e.type === 'click') {
+    document.getElementById('userModal').classList.remove('open');
+  }
+}
+
+function saveUserModal() {
+  const uid = document.getElementById('editUserId').value;
   const user = USERS.find(u => u.id === uid);
   if (!user) return;
 
-  const name = document.getElementById('edit-name-' + idx).value.trim();
-  const pass = document.getElementById('edit-pass-' + idx).value.trim();
-  const role = document.getElementById('edit-role-' + idx).value;
-  const resto = parseInt(document.getElementById('edit-resto-' + idx).value);
+  const name = document.getElementById('modal-user-name').value.trim();
+  const pass = document.getElementById('modal-user-pass').value.trim();
+  const role = document.getElementById('modal-user-role').value;
+  const resto = parseInt(document.getElementById('modal-user-resto').value);
 
   if (!name || !pass) { showToast('⚠️ Nombre y contraseña son obligatorios', '#e05252'); return; }
 
@@ -2097,6 +2115,7 @@ function saveEditUser(idx) {
 
   saveUsers(USERS);
   renderUsersList();
+  document.getElementById('userModal').classList.remove('open');
   showToast('✅ Usuario ' + name + ' actualizado');
 }
 
