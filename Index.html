@@ -571,7 +571,85 @@
   }
   .inc-summary-item { padding: 2px 0; }
   .action-btn.red { border-color: var(--red); color: var(--red); }
+
+  /* USER MANAGEMENT */
+  .user-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .user-card-info { flex: 1; }
+  .user-card-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; }
+  .user-card-meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .user-delete-btn {
+    background: none; border: 1.5px solid var(--red);
+    border-radius: 8px; padding: 6px 12px;
+    color: var(--red); font-size: 12px; font-family: 'Syne', sans-serif;
+    font-weight: 700; cursor: pointer;
+  }
+  .new-user-form {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+  }
+  .form-row { margin-bottom: 12px; }
+  .form-label { font-size: 11px; font-family: 'Syne', sans-serif; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); margin-bottom: 6px; display: block; }
+  .form-input {
+    width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+  }
+  .form-input:focus { outline: none; border-color: var(--accent); }
+  .form-select {
+    width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 12px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 14px;
+  }
+  .form-select:focus { outline: none; border-color: var(--accent); }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const SUPABASE_URL = 'https://kbmnrbgxuabcryfxklci.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_ogUQf-TYoezu-SaSmVlW4A_Z6c8rG7J';
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// Save order to Supabase
+async function saveOrderToCloud(order) {
+  try {
+    await supabaseClient.from('pedidos').insert([{
+      fecha: new Date(order.date).toISOString(),
+      restaurante: order.resto,
+      area: order.area,
+      proveedor: order.provider,
+      usuario: order.user || 'Desconocido',
+      items: order.items,
+      nota: order.note || '',
+      status: order.status,
+      incidencias: order.incidencias || [],
+      has_incidencia: order.hasIncidencia || false
+    }]);
+  } catch(e) { console.log('Cloud save error:', e); }
+}
+
+// Save inventario to Supabase
+async function saveInventarioToCloud(registros) {
+  try {
+    await supabaseClient.from('inventario').insert(registros);
+    return true;
+  } catch(e) {
+    console.log('Inventario save error:', e);
+    return false;
+  }
+}
+</script>
 </head>
 <body>
 
@@ -606,6 +684,7 @@
   <button class="tab" onclick="showTab('pedidos')">Pedidos</button>
   <button class="tab" onclick="showTab('panel')">Panel</button>
   <button class="tab" onclick="showTab('stock')">🔴 Stock</button>
+  <button class="tab" onclick="showTab('usuarios')" id="tab-btn-usuarios" style="display:none">👥 Usuarios</button>
 </div>
 
 <!-- NUEVO PEDIDO -->
@@ -705,6 +784,53 @@
     <div class="section-title" style="margin:0">🍷 Sala</div>
   </div>
   <div id="stockSala"></div>
+
+  <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+    <div class="section-title">📦 Cierre de inventario mensual</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+      Pulsa al final de mes para guardar el inventario actual en la nube y calcular la variación respecto al mes anterior.
+    </p>
+    <button class="submit-btn" onclick="cerrarInventarioMensual()" style="background:var(--blue)">
+      📊 Cerrar inventario del mes
+    </button>
+    <div id="inventarioResult" style="margin-top:12px"></div>
+  </div>
+</div>
+
+
+<!-- USUARIOS -->
+<div class="page" id="tab-usuarios">
+  <div class="section-title">Crear nuevo usuario</div>
+  <div class="new-user-form">
+    <div class="form-row">
+      <label class="form-label">Nombre</label>
+      <input class="form-input" id="new-user-name" placeholder="Nombre del usuario" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Contraseña</label>
+      <input class="form-input" id="new-user-pass" placeholder="Contraseña" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Rol</label>
+      <select class="form-select" id="new-user-role">
+        <option value="cocina">🍳 Cocina</option>
+        <option value="sala">🍷 Sala</option>
+        <option value="admin">👑 Admin</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Restaurante</label>
+      <select class="form-select" id="new-user-resto">
+        <option value="1">🏠 Ravatxol</option>
+        <option value="2">🏡 Tabalet</option>
+        <option value="0">Ambos (Admin)</option>
+      </select>
+    </div>
+    <button class="submit-btn" onclick="createUser()" style="margin-top:4px">➕ Crear usuario</button>
+  </div>
+
+  <div class="section-title">Usuarios actuales</div>
+  <div id="usersList"></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -712,12 +838,21 @@
 <script>
 
 // ─── USERS ───────────────────────────────────────────────
-const USERS = [
+const DEFAULT_USERS = [
   { id: 'andres', name: 'Andrés', pass: '1234', role: 'cocina', resto: 1, restoName: 'Ravatxol', isAdmin: false },
   { id: 'cindy',  name: 'Cindy',  pass: '1234', role: 'sala',   resto: 1, restoName: 'Ravatxol', isAdmin: false },
-  { id: 'alejandro', name: 'Alejandro', pass: '1234', role: 'admin', resto: null, restoName: 'Admin', isAdmin: true },
-  { id: 'david',  name: 'David',  pass: '1234', role: 'admin',  resto: null, restoName: 'Admin', isAdmin: true },
+  { id: 'alejandro', name: 'Alex', pass: '4102', role: 'admin', resto: null, restoName: 'Admin', isAdmin: true },
+  { id: 'david',  name: 'David Rico',  pass: '4102', role: 'admin',  resto: null, restoName: 'Admin', isAdmin: true },
 ];
+
+function loadUsers() {
+  const saved = localStorage.getItem('appUsers');
+  return saved ? JSON.parse(saved) : DEFAULT_USERS;
+}
+function saveUsers(users) {
+  localStorage.setItem('appUsers', JSON.stringify(users));
+}
+let USERS = loadUsers();
 
 let currentUser = null;
 
@@ -732,6 +867,8 @@ function doLogin() {
   currentUser = user;
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('userChip').style.display = 'flex';
+  const usersTabBtn = document.getElementById('tab-btn-usuarios');
+  if (usersTabBtn) usersTabBtn.style.display = user.isAdmin ? '' : 'none';
   document.getElementById('userChipName').textContent = user.name;
   document.getElementById('userChipRole').textContent = user.isAdmin ? '👑 Admin' : user.role === 'cocina' ? '🍳 Cocina' : '🍷 Sala';
 
@@ -1029,6 +1166,7 @@ function submitOrder() {
 
   orders.unshift(order);
   saveOrders();
+  saveOrderToCloud(order);
 
   // Build WhatsApp message
   const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -1224,6 +1362,127 @@ function saveIncidencias(orderId) {
   showToast(order.hasIncidencia ? '⚠️ Incidencia registrada' : '✅ Recepción confirmada sin incidencias');
 }
 
+
+// ─── INVENTARIO MENSUAL ──────────────────────────────────
+async function cerrarInventarioMensual() {
+  if (!currentUser || !currentUser.isAdmin) {
+    showToast('⚠️ Solo administradores pueden cerrar el inventario', '#e05252');
+    return;
+  }
+  const btn = document.querySelector('#tab-stock .submit-btn');
+  btn.textContent = '⏳ Guardando...';
+  btn.disabled = true;
+
+  const mes = new Date().toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  const saved = JSON.parse(localStorage.getItem('lastInventario') || '{}');
+  const registros = [];
+
+  PROVIDERS.forEach(prov => {
+    prov.products.forEach(prod => {
+      const anterior = saved[prod.id] || prod.stockActual;
+      const variacion = prod.stockActual - anterior;
+      registros.push({
+        mes,
+        producto: prod.name,
+        proveedor: prov.name,
+        area: prov.area,
+        restaurante: selectedResto,
+        stock_contado: prod.stockActual,
+        stock_anterior: anterior,
+        variacion,
+        usuario: currentUser.name
+      });
+    });
+  });
+
+  const ok = await saveInventarioToCloud(registros);
+
+  if (ok) {
+    // Save current as last inventario
+    const newSaved = {};
+    PROVIDERS.forEach(p => p.products.forEach(prod => { newSaved[prod.id] = prod.stockActual; }));
+    localStorage.setItem('lastInventario', JSON.stringify(newSaved));
+
+    const resEl = document.getElementById('inventarioResult');
+    resEl.innerHTML = `
+      <div style="background:rgba(76,175,125,0.1);border:1px solid var(--green);border-radius:12px;padding:16px">
+        <div style="font-family:'Syne',sans-serif;font-weight:700;color:var(--green);margin-bottom:10px">✅ Inventario de ${mes} guardado</div>
+        ${registros.map(r => `
+          <div style="font-size:12px;color:var(--muted);padding:3px 0;display:flex;justify-content:space-between">
+            <span>${r.producto}</span>
+            <span style="color:${r.variacion >= 0 ? 'var(--green)' : 'var(--red)'}">
+              ${r.variacion >= 0 ? '+' : ''}${r.variacion} ${r.variacion !== 0 ? '▲' : '—'}
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    showToast('✅ Inventario guardado en la nube');
+  } else {
+    showToast('❌ Error al guardar, comprueba la conexión', '#e05252');
+  }
+
+  btn.textContent = '📊 Cerrar inventario del mes';
+  btn.disabled = false;
+}
+
+
+// ─── USER MANAGEMENT ─────────────────────────────────────
+function renderUsersList() {
+  const el = document.getElementById('usersList');
+  if (!el) return;
+  el.innerHTML = USERS.map(u => `
+    <div class="user-card">
+      <div class="user-card-info">
+        <div class="user-card-name">${u.name} ${u.isAdmin ? '👑' : ''}</div>
+        <div class="user-card-meta">
+          ${u.isAdmin ? 'Admin · Todos los locales' : `${u.role === 'cocina' ? '🍳 Cocina' : '🍷 Sala'} · ${u.resto === 1 ? 'Ravatxol' : 'Tabalet'}`}
+          · Contraseña: ${u.pass}
+        </div>
+      </div>
+      ${!u.isAdmin ? `<button class="user-delete-btn" onclick="deleteUser('${u.id}')">Eliminar</button>` : ''}
+    </div>
+  `).join('');
+}
+
+function createUser() {
+  const name = document.getElementById('new-user-name').value.trim();
+  const pass = document.getElementById('new-user-pass').value.trim();
+  const role = document.getElementById('new-user-role').value;
+  const resto = parseInt(document.getElementById('new-user-resto').value);
+
+  if (!name || !pass) { showToast('⚠️ Rellena nombre y contraseña', '#e05252'); return; }
+  if (USERS.find(u => u.name.toLowerCase() === name.toLowerCase())) {
+    showToast('⚠️ Ya existe un usuario con ese nombre', '#e05252'); return;
+  }
+
+  const newUser = {
+    id: name.toLowerCase().replace(/\s/g, '_') + '_' + Date.now(),
+    name,
+    pass,
+    role,
+    resto: resto === 0 ? null : resto,
+    restoName: resto === 1 ? 'Ravatxol' : resto === 2 ? 'Tabalet' : 'Admin',
+    isAdmin: role === 'admin'
+  };
+
+  USERS.push(newUser);
+  saveUsers(USERS);
+  renderUsersList();
+
+  document.getElementById('new-user-name').value = '';
+  document.getElementById('new-user-pass').value = '';
+  showToast('✅ Usuario ' + name + ' creado');
+}
+
+function deleteUser(id) {
+  if (!confirm('¿Eliminar este usuario?')) return;
+  USERS = USERS.filter(u => u.id !== id);
+  saveUsers(USERS);
+  renderUsersList();
+  showToast('🗑️ Usuario eliminado');
+}
+
 // ─── STATS ───────────────────────────────────────────────
 function updateStats() {
   document.getElementById('stat-total').textContent = orders.length;
@@ -1307,11 +1566,12 @@ function showTab(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const idx = ['nuevo','pedidos','panel','stock'].indexOf(name);
+  const idx = ['nuevo','pedidos','panel','stock','usuarios'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name === 'pedidos') renderOrders();
   if (name === 'panel') updateStats();
   if (name === 'stock') { renderStock(); checkAlarms(); }
+  if (name === 'usuarios') { renderUsersList(); }
 }
 
 init();
