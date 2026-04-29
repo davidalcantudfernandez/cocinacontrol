@@ -668,6 +668,145 @@
     background: none; border: none; color: var(--muted);
     font-size: 20px; cursor: pointer;
   }
+
+  /* INCIDENCIAS TABLE */
+  .inc-table-row {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+    margin-bottom: 10px;
+  }
+  .inc-table-row.cobrado { opacity: 0.6; border-color: var(--green); }
+  .inc-table-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  .inc-ref { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 14px; color: var(--accent); }
+  .inc-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .inc-product-line { font-size: 13px; padding: 4px 0; border-top: 1px solid var(--border); }
+  .inc-product-line:first-of-type { border-top: none; }
+  .inc-issue-tag {
+    font-size: 10px; padding: 2px 6px; border-radius: 6px;
+    margin-left: 6px; font-family: 'Syne', sans-serif; font-weight: 700;
+  }
+  .inc-issue-tag.issue { background: rgba(224,82,82,0.2); color: var(--red); }
+  .inc-issue-tag.returned { background: rgba(255,179,71,0.2); color: var(--accent2); }
+  .photo-input { display: none; }
+  .photo-upload-btn {
+    width: 100%; padding: 12px; border-radius: 10px;
+    border: 1.5px dashed var(--border); background: var(--surface);
+    color: var(--muted); font-family: 'Syne', sans-serif; font-size: 12px;
+    font-weight: 700; cursor: pointer; margin-top: 10px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .photo-upload-btn:active { transform: scale(0.98); }
+  .photo-preview {
+    margin-top: 10px; border-radius: 10px; overflow: hidden;
+    border: 1px solid var(--border); position: relative;
+  }
+  .photo-preview img { width: 100%; display: block; }
+  .photo-remove {
+    position: absolute; top: 8px; right: 8px;
+    background: var(--red); color: white; border: none;
+    width: 28px; height: 28px; border-radius: 50%;
+    font-size: 16px; cursor: pointer;
+  }
+  .cobrado-toggle {
+    display: flex; align-items: center; gap: 10px;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; margin-top: 10px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .cobrado-toggle.checked { border-color: var(--green); background: rgba(76,175,125,0.08); }
+  .cobrado-checkbox {
+    width: 22px; height: 22px; border-radius: 6px;
+    border: 1.5px solid var(--border); display: flex;
+    align-items: center; justify-content: center;
+    color: white; font-size: 14px;
+  }
+  .cobrado-toggle.checked .cobrado-checkbox {
+    background: var(--green); border-color: var(--green);
+  }
+  .cobrado-label { flex: 1; font-size: 13px; font-weight: 500; }
+  .month-selector {
+    display: flex; gap: 8px; margin-bottom: 16px;
+    background: var(--surface2); border-radius: 10px; padding: 8px;
+  }
+  .month-selector select {
+    flex: 1; background: none; border: none;
+    color: var(--text); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; padding: 6px;
+  }
+  .month-selector select:focus { outline: none; }
+  .summary-card {
+    background: rgba(255,107,43,0.08);
+    border: 1px solid var(--accent);
+    border-radius: 12px; padding: 14px; margin-bottom: 16px;
+  }
+  .summary-row { display: flex; justify-content: space-between; padding: 4px 0; font-size: 13px; }
+  .summary-row strong { font-family: 'Syne', sans-serif; color: var(--accent); }
+
+  /* STOCK COLLAPSIBLE */
+  .stock-search {
+    width: 100%;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    margin-bottom: 16px;
+  }
+  .stock-search:focus { outline: none; border-color: var(--accent); }
+  .stock-search::placeholder { color: var(--muted); }
+  .prov-stock-group {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .prov-stock-header {
+    padding: 14px 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.15s;
+  }
+  .prov-stock-header:active { background: var(--surface); }
+  .prov-stock-name { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+  .prov-stock-info { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .prov-stock-badges { display: flex; gap: 6px; align-items: center; }
+  .prov-mini-badge {
+    font-size: 10px; font-weight: 700; padding: 2px 7px;
+    border-radius: 10px; font-family: 'Syne', sans-serif;
+  }
+  .prov-mini-badge.red { background: rgba(224,82,82,0.2); color: var(--red); }
+  .prov-mini-badge.yellow { background: rgba(255,179,71,0.2); color: var(--accent2); }
+  .prov-mini-badge.count { background: var(--surface); color: var(--muted); }
+  .prov-stock-arrow {
+    color: var(--muted); font-size: 18px;
+    transition: transform 0.2s; margin-left: 8px;
+  }
+  .prov-stock-group.open .prov-stock-arrow { transform: rotate(180deg); }
+  .prov-stock-products {
+    max-height: 0; overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    border-top: 1px solid var(--border);
+  }
+  .prov-stock-group.open .prov-stock-products {
+    max-height: 5000px;
+    padding: 12px;
+  }
+  .prov-stock-group.open .prov-stock-products .stock-item {
+    margin-bottom: 8px;
+  }
+  .prov-stock-group.open .prov-stock-products .stock-item:last-child {
+    margin-bottom: 0;
+  }
 </style>
 
 
@@ -704,9 +843,11 @@
   <button class="tab active" onclick="showTab('nuevo')">Nuevo Pedido</button>
   <button class="tab" onclick="showTab('pedidos')">Pedidos</button>
   <button class="tab" onclick="showTab('panel')">Panel</button>
-  <button class="tab" onclick="showTab('stock')">🔴 Stock</button>
   <button class="tab" onclick="showTab('usuarios')" id="tab-btn-usuarios" style="display:none">👥 Usuarios</button>
   <button class="tab" onclick="showTab('proveedores')" id="tab-btn-proveedores" style="display:none">📦 Proveedores</button>
+  <button class="tab" onclick="showTab('incidencias')">⚠️ Incidencias</button>
+  <button class="tab" onclick="showTab('albaranes')" id="tab-btn-albaranes" style="display:none">📄 Albaranes</button>
+  <button class="tab" onclick="showTab('inventario')">📊 Inventario</button>
 </div>
 
 <!-- NUEVO PEDIDO -->
@@ -790,22 +931,23 @@
 </div>
 
 
-<!-- STOCK -->
-<div class="page" id="tab-stock">
-  <div class="alarm-banner" id="alarmBanner">
+<!-- STOCK (oculto, queda como inventario en otra pestaña) -->
+<div class="page" id="tab-stock" style="display:none">
+  <div class="alarm-banner" id="alarmBanner" style="display:none">
     <div class="alarm-banner-title">🚨 Stock en mínimos</div>
     <div id="alarmList"></div>
   </div>
 
-  <div class="stock-section-header">
-    <div class="section-title" style="margin:0">🍳 Cocina</div>
-  </div>
-  <div id="stockCocina"></div>
+  <input type="search" class="stock-search" id="stockSearch" placeholder="🔍 Buscar producto o proveedor..." oninput="renderStock()" />
 
-  <div class="stock-section-header">
-    <div class="section-title" style="margin:0">🍷 Sala</div>
+  <div class="filter-bar" id="stockAreaFilters">
+    <button class="filter-chip active" onclick="filterStockArea('all', this)">Todos</button>
+    <button class="filter-chip" onclick="filterStockArea('cocina', this)">🍳 Cocina</button>
+    <button class="filter-chip" onclick="filterStockArea('sala', this)">🍷 Sala</button>
+    <button class="filter-chip" onclick="filterStockArea('alert', this)">🚨 Solo alertas</button>
   </div>
-  <div id="stockSala"></div>
+
+  <div id="stockProviders"></div>
 
   <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
     <div class="section-title">📦 Cierre de inventario mensual</div>
@@ -856,6 +998,118 @@
 </div>
 
 
+
+
+
+<!-- ALBARANES -->
+<div class="page" id="tab-albaranes">
+  <div class="section-title">Subir albarán y vincular a pedido</div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+    Sube la foto del albarán y selecciona a qué pedido corresponde. Quedará vinculado para revisión.
+  </p>
+
+  <input type="file" accept="image/*" capture="environment" class="photo-input" id="albaran-photo-input" onchange="handleAlbaranPhotoSelect(this)" />
+
+  <button class="submit-btn" onclick="document.getElementById('albaran-photo-input').click()" style="background:var(--blue);margin-bottom:16px">
+    📷 Subir foto del albarán
+  </button>
+
+  <div id="albaranPreview"></div>
+  <div id="albaranLinkSection" style="display:none">
+    <div class="section-title">Vincular a pedido</div>
+    <div class="filter-bar" id="albaran-filters">
+      <button class="filter-chip active" onclick="filterAlbaranOrders('all', this)">Todos</button>
+      <button class="filter-chip" onclick="filterAlbaranOrders('1', this)">Ravatxol</button>
+      <button class="filter-chip" onclick="filterAlbaranOrders('2', this)">Tabalet</button>
+      <button class="filter-chip" onclick="filterAlbaranOrders('week', this)">Esta semana</button>
+    </div>
+    <div id="albaranOrderList"></div>
+  </div>
+
+  <div style="margin-top:30px">
+    <div class="section-title">📋 Albaranes guardados</div>
+    <div id="albaranesList"></div>
+  </div>
+</div>
+
+<!-- INCIDENCIAS -->
+<div class="page" id="tab-incidencias">
+  <div class="section-title">Resumen de incidencias</div>
+
+  <div class="month-selector">
+    <select id="inc-month-filter">
+      <option value="all">Todos los meses</option>
+      <option value="01">Enero</option>
+      <option value="02">Febrero</option>
+      <option value="03">Marzo</option>
+      <option value="04">Abril</option>
+      <option value="05">Mayo</option>
+      <option value="06">Junio</option>
+      <option value="07">Julio</option>
+      <option value="08">Agosto</option>
+      <option value="09">Septiembre</option>
+      <option value="10">Octubre</option>
+      <option value="11">Noviembre</option>
+      <option value="12">Diciembre</option>
+    </select>
+    <select id="inc-resto-filter">
+      <option value="all">Todos los locales</option>
+      <option value="1">Ravatxol</option>
+      <option value="2">Tabalet</option>
+    </select>
+  </div>
+
+  <div id="incidenciasSummary"></div>
+  <div id="incidenciasList"></div>
+</div>
+
+
+<!-- INVENTARIO -->
+<div class="page" id="tab-inventario">
+  <div class="filter-bar" style="margin-bottom:16px">
+    <button class="filter-chip active" onclick="switchInvMode('current', this)">📝 Contar actual</button>
+    <button class="filter-chip" onclick="switchInvMode('history', this)">📊 Ver histórico</button>
+  </div>
+
+  <div id="inv-current-view">
+    <div class="section-title">Inventario mensual</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+      Cuenta físicamente lo que hay de cada producto. Cuando termines, pulsa cerrar inventario para guardar la foto del mes.
+    </p>
+
+  <input type="search" class="stock-search" id="invSearch" placeholder="🔍 Buscar producto o proveedor..." oninput="renderInventario()" />
+
+  <div class="filter-bar">
+    <button class="filter-chip active" onclick="filterInvArea('all', this)">Todos</button>
+    <button class="filter-chip" onclick="filterInvArea('cocina', this)">🍳 Cocina</button>
+    <button class="filter-chip" onclick="filterInvArea('sala', this)">🍷 Sala</button>
+  </div>
+
+  <div id="inventarioProviders"></div>
+
+  </div>
+
+  <div id="inv-history-view" style="display:none">
+    <div class="section-title">Histórico de inventarios</div>
+    <div class="month-selector" style="margin-bottom:16px">
+      <select id="inv-history-month" onchange="renderInvHistory()">
+        <option value="">Selecciona mes</option>
+      </select>
+    </div>
+    <div id="invHistoryList"></div>
+  </div>
+
+  <div id="inv-close-section" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+    <div class="section-title">📊 Cerrar inventario del mes</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+      Esto guarda la foto fija del mes en la nube y calcula la variación respecto al mes anterior.
+    </p>
+    <button class="submit-btn" onclick="cerrarInventarioMensual()" style="background:var(--blue)">
+      📊 Cerrar inventario del mes
+    </button>
+    <div id="inventarioResult" style="margin-top:12px"></div>
+  </div>
+</div>
 
 <!-- MODAL EDITAR USUARIO -->
 <div class="modal-overlay" id="userModal" onclick="closeUserModal(event)">
@@ -1036,6 +1290,10 @@ function doLogin() {
   if (usersTabBtn) usersTabBtn.style.display = user.isAdmin ? '' : 'none';
   const provTabBtn = document.getElementById('tab-btn-proveedores');
   if (provTabBtn) provTabBtn.style.display = user.isAdmin ? '' : 'none';
+
+  const albTabBtn = document.getElementById('tab-btn-albaranes');
+  if (albTabBtn) albTabBtn.style.display = user.isAdmin ? '' : 'none';
+
   document.getElementById('userChipName').textContent = user.name;
   document.getElementById('userChipRole').textContent = user.isAdmin ? '👑 Admin' : user.role === 'cocina' ? '🍳 Cocina' : '🍷 Sala';
 
@@ -1354,45 +1612,109 @@ function getStockLabel(prod) {
   return { cls: 'green', txt: '✅ OK' };
 }
 
+let stockAreaFilter = 'all';
+let openProviderStocks = new Set();
+
+function filterStockArea(area, btn) {
+  stockAreaFilter = area;
+  document.querySelectorAll('#stockAreaFilters .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderStock();
+}
+
+function toggleProviderStock(provId) {
+  if (openProviderStocks.has(provId)) openProviderStocks.delete(provId);
+  else openProviderStocks.add(provId);
+  renderStock();
+}
+
 function renderStock() {
-  ['cocina', 'sala'].forEach(area => {
-    const el = document.getElementById('stock' + area.charAt(0).toUpperCase() + area.slice(1));
-    const providers = PROVIDERS.filter(p => p.area === area);
-    let html = '';
-    providers.forEach(prov => {
-      prov.products.forEach(prod => {
-        const pct = Math.min(100, (prod.stockActual / (prod.stockMin * 2)) * 100);
-        const status = getStockStatus(prod);
-        const label = getStockLabel(prod);
-        const barColor = status === 'red' ? 'var(--red)' : status === 'yellow' ? 'var(--accent2)' : 'var(--green)';
-        const cardClass = status === 'red' ? 'alert' : status === 'yellow' ? 'warning' : '';
-        html += `
-          <div class="stock-item ${cardClass}">
-            <div class="stock-header">
-              <div>
-                <div class="stock-name">${prod.name}</div>
-                <div class="stock-provider">${prov.name}</div>
-              </div>
-              <div class="stock-alert-badge ${label.cls}">${label.txt}</div>
-            </div>
-            <div class="stock-controls">
-              <div class="stock-bar-wrap">
-                <div class="stock-bar" style="width:${pct}%;background:${barColor}"></div>
-              </div>
-              <div class="stock-current" style="color:${barColor}">${prod.stockActual} ${prod.unit}</div>
-            </div>
-            <div class="stock-adjust">
-              <button class="stock-adj-btn minus" onclick="adjustStock('${prod.id}', -1)">−</button>
-              <div class="stock-adj-label">Mínimo: ${prod.stockMin} ${prod.unit}</div>
-              <button class="stock-adj-btn plus" onclick="adjustStock('${prod.id}', 1)">+</button>
-              ${status !== 'green' ? `<button class="stock-order-btn" onclick="quickOrder('${prov.id}', '${prod.id}')">📲 Pedir</button>` : ''}
-            </div>
+  const el = document.getElementById('stockProviders');
+  if (!el) return;
+
+  const searchEl = document.getElementById('stockSearch');
+  const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+
+  let providers = PROVIDERS;
+  if (stockAreaFilter === 'cocina') providers = providers.filter(p => p.area === 'cocina');
+  else if (stockAreaFilter === 'sala') providers = providers.filter(p => p.area === 'sala');
+
+  let html = '';
+  providers.forEach(prov => {
+    let products = prov.products;
+    if (search) {
+      products = products.filter(p =>
+        p.name.toLowerCase().includes(search) ||
+        (p.provName && p.provName.toLowerCase().includes(search)) ||
+        prov.name.toLowerCase().includes(search)
+      );
+    }
+    if (stockAreaFilter === 'alert') {
+      products = products.filter(p => getStockStatus(p) !== 'green');
+    }
+
+    if (products.length === 0) return;
+
+    const alerts = products.filter(p => getStockStatus(p) === 'red').length;
+    const warnings = products.filter(p => getStockStatus(p) === 'yellow').length;
+
+    // Auto-open if searching or has alerts
+    const shouldOpen = openProviderStocks.has(prov.id) || (search && search.length > 0) || (stockAreaFilter === 'alert');
+
+    html += `
+      <div class="prov-stock-group ${shouldOpen ? 'open' : ''}">
+        <div class="prov-stock-header" onclick="toggleProviderStock('${prov.id}')">
+          <div style="flex:1;min-width:0">
+            <div class="prov-stock-name">${prov.area === 'cocina' ? '🍳' : '🍷'} ${prov.name}</div>
+            <div class="prov-stock-info">${products.length} producto${products.length === 1 ? '' : 's'}${prov.contact ? ' · ' + prov.contact : ''}</div>
           </div>
-        `;
-      });
-    });
-    el.innerHTML = html;
+          <div class="prov-stock-badges">
+            ${alerts > 0 ? `<span class="prov-mini-badge red">🚨 ${alerts}</span>` : ''}
+            ${warnings > 0 ? `<span class="prov-mini-badge yellow">⚠️ ${warnings}</span>` : ''}
+            <span class="prov-stock-arrow">▼</span>
+          </div>
+        </div>
+        <div class="prov-stock-products">
+          ${products.map(prod => {
+            const pct = Math.min(100, (prod.stockActual / (prod.stockMin * 2)) * 100);
+            const status = getStockStatus(prod);
+            const label = getStockLabel(prod);
+            const barColor = status === 'red' ? 'var(--red)' : status === 'yellow' ? 'var(--accent2)' : 'var(--green)';
+            const cardClass = status === 'red' ? 'alert' : status === 'yellow' ? 'warning' : '';
+            return `
+              <div class="stock-item ${cardClass}">
+                <div class="stock-header">
+                  <div>
+                    <div class="stock-name">${prod.name}</div>
+                    <div class="stock-provider" style="font-size:11px">${prod.provName || ''}</div>
+                  </div>
+                  <div class="stock-alert-badge ${label.cls}">${label.txt}</div>
+                </div>
+                <div class="stock-controls">
+                  <div class="stock-bar-wrap">
+                    <div class="stock-bar" style="width:${pct}%;background:${barColor}"></div>
+                  </div>
+                  <div class="stock-current" style="color:${barColor}">${prod.stockActual} ${prod.unit}</div>
+                </div>
+                <div class="stock-adjust">
+                  <button class="stock-adj-btn minus" onclick="event.stopPropagation();adjustStock('${prod.id}', -1)">−</button>
+                  <div class="stock-adj-label">Mín: ${prod.stockMin} ${prod.unit}</div>
+                  <button class="stock-adj-btn plus" onclick="event.stopPropagation();adjustStock('${prod.id}', 1)">+</button>
+                  ${status !== 'green' ? `<button class="stock-order-btn" onclick="event.stopPropagation();quickOrder('${prov.id}', '${prod.id}')">📲 Pedir</button>` : ''}
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
   });
+
+  if (!html) {
+    html = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Sin resultados</div></div>';
+  }
+
+  el.innerHTML = html;
 }
 
 function checkAlarms() {
@@ -1523,6 +1845,21 @@ function changeQty(id, delta) {
 }
 
 // ─── SUBMIT ──────────────────────────────────────────────
+function getNextOrderRef(resto) {
+  const year = new Date().getFullYear();
+  const month = String(new Date().getMonth() + 1).padStart(2, '0');
+  const restoCode = resto === 1 ? 'RX' : 'TA';
+  const areaCode = selectedArea === 'cocina' ? 'CO' : 'SA';
+
+  // Get all orders of this year and resto to count
+  const yearOrders = orders.filter(o => {
+    const oYear = new Date(o.date).getFullYear();
+    return oYear === year && o.resto === resto;
+  });
+  const nextNum = String(yearOrders.length + 1).padStart(3, '0');
+  return `${restoCode}_${areaCode}_${nextNum}_${month}`;
+}
+
 function submitOrder() {
   const items = selectedProvider.products
     .filter(p => quantities[p.id] > 0)
@@ -1535,9 +1872,11 @@ function submitOrder() {
 
   const note = document.getElementById('orderNote').value.trim();
   const restoName = selectedResto === 1 ? 'Ravatxol' : 'Tabalet';
+  const orderRef = getNextOrderRef(selectedResto);
 
   const order = {
     id: Date.now(),
+    ref: orderRef,
     resto: selectedResto,
     area: selectedArea,
     user: currentUser ? currentUser.name : 'Desconocido',
@@ -1557,7 +1896,7 @@ function submitOrder() {
   // Build WhatsApp message
   const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
   const areaLabel = selectedArea === 'cocina' ? '🍳 Cocina' : '🍷 Sala';
-  let msg = `📦 *Pedido ${restoName} · ${areaLabel}*\n`;
+  let msg = `📦 *Pedido ${restoName} · ${areaLabel}*\n🔖 Ref: ${orderRef}\n`;
   msg += `📅 ${dateStr}\n\n`;
   items.forEach(i => { msg += `• ${i.name}: ${i.qty} ${i.unit}\n`; });
   if (note) msg += `\n📝 ${note}`;
@@ -1611,8 +1950,7 @@ function renderOrders(filter) {
     const actions = o.status === 'pendiente'
       ? `<button class="action-btn blue" onclick="updateStatus(${o.id}, 'enviado')">Marcar enviado</button>`
       : o.status === 'enviado'
-      ? `<button class="action-btn green" onclick="updateStatus(${o.id}, 'recibido')">✅ Recibido</button>
-         <button class="action-btn red" onclick="updateStatus(${o.id}, 'recibido'); toggleIncidencia(${o.id})">⚠️ Con incidencia</button>`
+      ? `<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
       : '';
 
     // Build incidencia summary if exists
@@ -1650,6 +1988,7 @@ function renderOrders(filter) {
         <div class="order-card-header">
           <div>
             <div class="order-card-title">${o.provider} ${restoTag} ${areaTag}</div>
+            ${o.ref ? `<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:var(--accent);margin-top:2px">🔖 ${o.ref}</div>` : ''}
             <div class="order-card-sub">${dateStr} · 👤 ${o.user || '-'}</div>
           </div>
           <div class="status-badge ${statusClass}">${statusLabel}</div>
@@ -1670,6 +2009,17 @@ function renderOrders(filter) {
           <div class="incidencia-panel" id="inc-panel-${o.id}">
             <div class="inc-title">📋 Registro de incidencias</div>
             ${incPanel}
+            <div class="inc-title" style="margin-top:14px">📸 Foto del albarán</div>
+            <input type="file" accept="image/*" capture="environment" class="photo-input" id="photo-input-${o.id}" onchange="handlePhotoUpload(${o.id}, this)" />
+            <button class="photo-upload-btn" onclick="document.getElementById('photo-input-${o.id}').click()">
+              ${o.albaranPhoto ? '🔄 Cambiar foto' : '📷 Subir foto del albarán'}
+            </button>
+            ${o.albaranPhoto ? `
+              <div class="photo-preview">
+                <img src="${o.albaranPhoto}" alt="Albarán" />
+                <button class="photo-remove" onclick="removePhoto(${o.id})">×</button>
+              </div>
+            ` : ''}
             <button class="inc-save-btn" onclick="saveIncidencias(${o.id})">💾 Guardar incidencias</button>
           </div>
           <div style="margin-top:8px;text-align:center">
@@ -1729,6 +2079,14 @@ function setIncStatus(orderId, productName, status, btn) {
 function saveIncidencias(orderId) {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
+  
+  // Check if photo is uploaded
+  if (!order.albaranPhoto) {
+    showToast('📸 Sube primero la foto del albarán', '#e05252');
+    document.getElementById('photo-input-' + orderId).scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  
   const panel = document.getElementById('inc-panel-' + orderId);
   const rows = panel.querySelectorAll('.inc-product-row');
   order.incidencias = [];
@@ -1743,11 +2101,218 @@ function saveIncidencias(orderId) {
     order.incidencias.push(inc);
   });
   order.hasIncidencia = order.incidencias.some(i => i.status !== 'ok');
+  order.status = 'recibido';
+  order.receivedAt = new Date().toISOString();
+  order.receivedBy = currentUser ? currentUser.name : 'Desconocido';
   saveOrders();
   renderOrders();
-  showToast(order.hasIncidencia ? '⚠️ Incidencia registrada' : '✅ Recepción confirmada sin incidencias');
+  showToast(order.hasIncidencia ? '⚠️ Pedido recibido con incidencia' : '✅ Pedido recibido correctamente');
 }
 
+
+
+
+let invMode = 'current';
+
+function switchInvMode(mode, btn) {
+  invMode = mode;
+  btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.getElementById('inv-current-view').style.display = mode === 'current' ? 'block' : 'none';
+  document.getElementById('inv-history-view').style.display = mode === 'history' ? 'block' : 'none';
+  document.getElementById('inv-close-section').style.display = mode === 'current' ? 'block' : 'none';
+
+  if (mode === 'history') loadInvHistoryMonths();
+}
+
+async function loadInvHistoryMonths() {
+  if (!supabaseClient) {
+    document.getElementById('inv-history-month').innerHTML = '<option>Conectando...</option>';
+    return;
+  }
+  try {
+    const { data, error } = await supabaseClient
+      .from('inventario')
+      .select('mes')
+      .order('fecha', { ascending: false });
+
+    if (error) throw error;
+    const months = [...new Set(data.map(d => d.mes))];
+    const sel = document.getElementById('inv-history-month');
+    sel.innerHTML = '<option value="">Selecciona mes</option>' + months.map(m => `<option value="${m}">${m}</option>`).join('');
+  } catch(e) {
+    document.getElementById('inv-history-month').innerHTML = '<option>Error al cargar</option>';
+  }
+}
+
+async function renderInvHistory() {
+  const mes = document.getElementById('inv-history-month').value;
+  const el = document.getElementById('invHistoryList');
+  if (!mes) { el.innerHTML = ''; return; }
+  if (!supabaseClient) {
+    el.innerHTML = '<div class="empty"><div class="empty-text">Conectando a la nube...</div></div>';
+    return;
+  }
+
+  try {
+    const { data, error } = await supabaseClient
+      .from('inventario')
+      .select('*')
+      .eq('mes', mes)
+      .order('producto');
+
+    if (error) throw error;
+
+    if (!data || data.length === 0) {
+      el.innerHTML = '<div class="empty"><div class="empty-text">Sin datos para este mes</div></div>';
+      return;
+    }
+
+    // Group by area
+    const cocina = data.filter(d => d.area === 'cocina');
+    const sala = data.filter(d => d.area === 'sala');
+
+    let html = '';
+    if (cocina.length > 0) {
+      html += '<div class="section-title">🍳 Cocina</div>';
+      html += cocina.map(d => `
+        <div class="stock-item">
+          <div class="stock-header">
+            <div>
+              <div class="stock-name">${d.producto}</div>
+              <div class="stock-provider" style="font-size:11px">${d.proveedor}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:13px">
+            <div><span style="color:var(--muted)">Contado:</span> <strong>${d.stock_contado || 0}</strong></div>
+            <div><span style="color:var(--muted)">Anterior:</span> ${d.stock_anterior || 0}</div>
+            <div style="color:${d.variacion >= 0 ? 'var(--green)' : 'var(--red)'}">
+              ${d.variacion >= 0 ? '▲' : '▼'} ${Math.abs(d.variacion || 0)}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    if (sala.length > 0) {
+      html += '<div class="section-title" style="margin-top:20px">🍷 Sala</div>';
+      html += sala.map(d => `
+        <div class="stock-item">
+          <div class="stock-header">
+            <div>
+              <div class="stock-name">${d.producto}</div>
+              <div class="stock-provider" style="font-size:11px">${d.proveedor}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:16px;margin-top:8px;font-size:13px">
+            <div><span style="color:var(--muted)">Contado:</span> <strong>${d.stock_contado || 0}</strong></div>
+            <div><span style="color:var(--muted)">Anterior:</span> ${d.stock_anterior || 0}</div>
+            <div style="color:${d.variacion >= 0 ? 'var(--green)' : 'var(--red)'}">
+              ${d.variacion >= 0 ? '▲' : '▼'} ${Math.abs(d.variacion || 0)}
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    el.innerHTML = html;
+  } catch(e) {
+    el.innerHTML = '<div class="empty"><div class="empty-text">Error al cargar histórico</div></div>';
+  }
+}
+
+// ─── INVENTARIO (admin) ──────────────────────────────────
+let invAreaFilter = 'all';
+let openInvProviders = new Set();
+
+function filterInvArea(area, btn) {
+  invAreaFilter = area;
+  btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderInventario();
+}
+
+function toggleInvProvider(provId) {
+  if (openInvProviders.has(provId)) openInvProviders.delete(provId);
+  else openInvProviders.add(provId);
+  renderInventario();
+}
+
+function setInvCount(prodId, value) {
+  const v = parseFloat(value) || 0;
+  PROVIDERS.forEach(prov => {
+    prov.products.forEach(prod => {
+      if (prod.id === prodId) prod.stockActual = v;
+    });
+  });
+  saveStock();
+}
+
+function renderInventario() {
+  const el = document.getElementById('inventarioProviders');
+  if (!el) return;
+
+  const searchEl = document.getElementById('invSearch');
+  const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+
+  let providers = PROVIDERS;
+  if (invAreaFilter === 'cocina') providers = providers.filter(p => p.area === 'cocina');
+  else if (invAreaFilter === 'sala') providers = providers.filter(p => p.area === 'sala');
+
+  let html = '';
+  providers.forEach(prov => {
+    let products = prov.products;
+    if (search) {
+      products = products.filter(p =>
+        p.name.toLowerCase().includes(search) ||
+        (p.provName && p.provName.toLowerCase().includes(search)) ||
+        prov.name.toLowerCase().includes(search)
+      );
+    }
+    if (products.length === 0) return;
+
+    const shouldOpen = openInvProviders.has(prov.id) || (search && search.length > 0);
+
+    html += `
+      <div class="prov-stock-group ${shouldOpen ? 'open' : ''}">
+        <div class="prov-stock-header" onclick="toggleInvProvider('${prov.id}')">
+          <div style="flex:1;min-width:0">
+            <div class="prov-stock-name">${prov.area === 'cocina' ? '🍳' : '🍷'} ${prov.name}</div>
+            <div class="prov-stock-info">${products.length} producto${products.length === 1 ? '' : 's'}</div>
+          </div>
+          <span class="prov-stock-arrow">▼</span>
+        </div>
+        <div class="prov-stock-products">
+          ${products.map(prod => `
+            <div class="stock-item">
+              <div class="stock-header">
+                <div>
+                  <div class="stock-name">${prod.name}</div>
+                  <div class="stock-provider" style="font-size:11px">${prod.provName || ''}</div>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:8px">
+                <div style="font-size:12px;color:var(--muted);flex:1">Cantidad contada:</div>
+                <input type="number" min="0" step="0.5" value="${prod.stockActual}"
+                  onchange="event.stopPropagation();setInvCount('${prod.id}', this.value)"
+                  onclick="event.stopPropagation()"
+                  style="width:80px;background:var(--surface);border:1.5px solid var(--border);border-radius:8px;padding:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;text-align:center" />
+                <span style="font-size:12px;color:var(--muted)">${prod.unit}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  });
+
+  if (!html) {
+    html = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">Sin resultados</div></div>';
+  }
+
+  el.innerHTML = html;
+}
 
 // ─── INVENTARIO MENSUAL ──────────────────────────────────
 async function cerrarInventarioMensual() {
@@ -1891,7 +2456,7 @@ function openEditProvModal(provId) {
 }
 
 function closeProvModal(e) {
-  if (!e || e.target === document.getElementById('provModal') || e.type === 'click') {
+  if (!e || e.target === document.getElementById('provModal')) {
     document.getElementById('provModal').classList.remove('open');
   }
 }
@@ -1969,7 +2534,7 @@ function fillProviderSelect(currentProvId) {
 }
 
 function closeProductModal(e) {
-  if (!e || e.target === document.getElementById('productModal') || e.type === 'click') {
+  if (!e || e.target === document.getElementById('productModal')) {
     document.getElementById('productModal').classList.remove('open');
   }
 }
@@ -2066,7 +2631,7 @@ function openUserModal(uid) {
 }
 
 function closeUserModal(e) {
-  if (!e || e.target === document.getElementById('userModal') || e.type === 'click') {
+  if (!e || e.target === document.getElementById('userModal')) {
     document.getElementById('userModal').classList.remove('open');
   }
 }
@@ -2132,6 +2697,318 @@ function deleteUser(id) {
   saveUsers(USERS);
   renderUsersList();
   showToast('🗑️ Usuario eliminado');
+}
+
+
+
+
+// ─── IMAGE COMPRESSION ───────────────────────────────────
+async function compressImage(file, maxSizeKB = 200) {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+        
+        // Scale down if too large
+        const maxDim = 1200;
+        if (width > maxDim || height > maxDim) {
+          if (width > height) {
+            height = (height / width) * maxDim;
+            width = maxDim;
+          } else {
+            width = (width / height) * maxDim;
+            height = maxDim;
+          }
+        }
+        
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        
+        // Start with quality 0.7 and adjust if needed
+        let quality = 0.7;
+        let compressed = canvas.toDataURL('image/jpeg', quality);
+        
+        // If still too large, reduce quality
+        while (compressed.length > maxSizeKB * 1024 * 1.37 && quality > 0.1) {
+          quality -= 0.1;
+          compressed = canvas.toDataURL('image/jpeg', quality);
+        }
+        
+        resolve(compressed);
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+// ─── ALBARANES ──────────────────────────────────────────
+let pendingAlbaranPhoto = null;
+let albaranOrderFilter = 'all';
+
+async function handleAlbaranPhotoSelect(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('⏳ Comprimiendo imagen...', '#5b9cf6');
+  const compressed = await compressImage(file);
+  pendingAlbaranPhoto = compressed;
+  document.getElementById('albaranPreview').innerHTML = `
+    <div class="photo-preview" style="margin-bottom:16px">
+      <img src="${pendingAlbaranPhoto}" alt="Albarán" style="max-height:300px;object-fit:contain;background:var(--surface)" />
+      <button class="photo-remove" onclick="cancelAlbaran()">×</button>
+    </div>
+  `;
+  document.getElementById('albaranLinkSection').style.display = 'block';
+  renderAlbaranOrderList();
+  showToast('📸 Foto cargada · selecciona el pedido');
+}
+
+function cancelAlbaran() {
+  pendingAlbaranPhoto = null;
+  document.getElementById('albaranPreview').innerHTML = '';
+  document.getElementById('albaranLinkSection').style.display = 'none';
+  document.getElementById('albaran-photo-input').value = '';
+}
+
+function filterAlbaranOrders(filter, btn) {
+  albaranOrderFilter = filter;
+  document.querySelectorAll('#albaran-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderAlbaranOrderList();
+}
+
+function renderAlbaranOrderList() {
+  const el = document.getElementById('albaranOrderList');
+  let filtered = orders.filter(o => o.status === 'enviado' || o.status === 'recibido');
+
+  if (albaranOrderFilter === '1' || albaranOrderFilter === '2') {
+    filtered = filtered.filter(o => o.resto === parseInt(albaranOrderFilter));
+  }
+  if (albaranOrderFilter === 'week') {
+    const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    filtered = filtered.filter(o => new Date(o.date).getTime() > weekAgo);
+  }
+
+  // Sort recent first
+  filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  if (filtered.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-text" style="font-size:13px">No hay pedidos para vincular</div></div>';
+    return;
+  }
+
+  el.innerHTML = filtered.slice(0, 30).map(o => {
+    const d = new Date(o.date);
+    const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    const restoTag = `<span class="resto-tag r${o.resto}">R${o.resto === 1 ? 'X' : 'A'}</span>`;
+    return `
+      <div class="order-card" style="cursor:pointer" onclick="linkAlbaranToOrder(${o.id})">
+        <div class="order-card-header" style="margin-bottom:6px">
+          <div>
+            <div class="order-card-title" style="font-size:14px">${o.provider} ${restoTag}</div>
+            ${o.ref ? `<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:11px;color:var(--accent);margin-top:2px">🔖 ${o.ref}</div>` : ''}
+            <div class="order-card-sub">${dateStr} · ${o.items.length} producto(s)</div>
+          </div>
+          <div style="background:var(--accent);color:white;border-radius:50%;width:32px;height:32px;display:flex;align-items:center;justify-content:center;font-size:18px">→</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function linkAlbaranToOrder(orderId) {
+  if (!pendingAlbaranPhoto) return;
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  if (!confirm(`¿Vincular este albarán al pedido ${order.ref || order.id}?`)) return;
+
+  order.albaranPhoto = pendingAlbaranPhoto;
+  order.albaranLinkedAt = new Date().toISOString();
+  order.albaranLinkedBy = currentUser ? currentUser.name : 'Admin';
+  saveOrders();
+
+  pendingAlbaranPhoto = null;
+  document.getElementById('albaranPreview').innerHTML = '';
+  document.getElementById('albaranLinkSection').style.display = 'none';
+  document.getElementById('albaran-photo-input').value = '';
+  renderAlbaranesList();
+
+  showToast('✅ Albarán vinculado a ' + (order.ref || 'pedido'));
+}
+
+function renderAlbaranesList() {
+  const el = document.getElementById('albaranesList');
+  const withAlbaran = orders.filter(o => o.albaranPhoto);
+  withAlbaran.sort((a, b) => new Date(b.albaranLinkedAt || b.date) - new Date(a.albaranLinkedAt || a.date));
+
+  if (withAlbaran.length === 0) {
+    el.innerHTML = '<div class="empty" style="padding:30px"><div class="empty-text" style="font-size:13px">Sin albaranes guardados</div></div>';
+    return;
+  }
+
+  el.innerHTML = withAlbaran.slice(0, 20).map(o => {
+    const d = new Date(o.albaranLinkedAt || o.date);
+    const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short' });
+    return `
+      <div class="order-card">
+        <div class="order-card-header" style="margin-bottom:8px">
+          <div>
+            ${o.ref ? `<div style="font-family:'Syne',sans-serif;font-weight:800;font-size:13px;color:var(--accent)">🔖 ${o.ref}</div>` : ''}
+            <div class="order-card-title" style="font-size:14px;margin-top:3px">${o.provider}</div>
+            <div class="order-card-sub">${dateStr} · ${o.resto === 1 ? 'Ravatxol' : 'Tabalet'}${o.albaranLinkedBy ? ' · 👤 ' + o.albaranLinkedBy : ''}</div>
+          </div>
+          ${o.hasIncidencia ? '<span class="status-badge status-pending" style="background:rgba(224,82,82,0.15);color:var(--red)">⚠️ Incidencia</span>' : ''}
+        </div>
+        <div class="photo-preview" style="margin-top:8px">
+          <img src="${o.albaranPhoto}" alt="Albarán" style="max-height:200px;object-fit:contain;background:var(--surface)" />
+          <button class="photo-remove" onclick="removeAlbaranPhoto(${o.id})">×</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function removeAlbaranPhoto(orderId) {
+  if (!confirm('¿Eliminar este albarán?')) return;
+  const o = orders.find(o => o.id === orderId);
+  if (o) {
+    delete o.albaranPhoto;
+    delete o.albaranLinkedAt;
+    delete o.albaranLinkedBy;
+    saveOrders();
+    renderAlbaranesList();
+    showToast('🗑️ Albarán eliminado');
+  }
+}
+
+
+// ─── RECEPTION FLOW ──────────────────────────────────────
+function openReceptionFlow(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  
+  // Force show incidencia panel first
+  const panel = document.getElementById('inc-panel-' + orderId);
+  if (panel) {
+    panel.classList.add('open');
+    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+  
+  showToast('📸 Sube foto del albarán y revisa productos', '#5b9cf6');
+}
+
+// ─── PHOTO UPLOAD ───────────────────────────────────────
+async function handlePhotoUpload(orderId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('⏳ Comprimiendo imagen...', '#5b9cf6');
+  const compressed = await compressImage(file);
+  const order = orders.find(o => o.id === orderId);
+  if (order) {
+    order.albaranPhoto = compressed;
+    saveOrders();
+    renderOrders();
+    showToast('📸 Foto del albarán subida');
+  }
+}
+
+function removePhoto(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (order) {
+    delete order.albaranPhoto;
+    saveOrders();
+    renderOrders();
+    showToast('🗑️ Foto eliminada');
+  }
+}
+
+// ─── INCIDENCIAS PANEL (ADMIN) ──────────────────────────
+function renderIncidencias() {
+  const monthFilter = document.getElementById('inc-month-filter').value;
+  const restoFilter = document.getElementById('inc-resto-filter').value;
+
+  let inciOrders = orders.filter(o => o.hasIncidencia);
+  if (monthFilter !== 'all') {
+    inciOrders = inciOrders.filter(o => {
+      const m = String(new Date(o.date).getMonth() + 1).padStart(2, '0');
+      return m === monthFilter;
+    });
+  }
+  if (restoFilter !== 'all') {
+    inciOrders = inciOrders.filter(o => o.resto === parseInt(restoFilter));
+  }
+
+  // Summary
+  const total = inciOrders.length;
+  const cobradas = inciOrders.filter(o => o.cobradoOk).length;
+  const pendientes = total - cobradas;
+  const summaryEl = document.getElementById('incidenciasSummary');
+  summaryEl.innerHTML = total === 0 ? '' : `
+    <div class="summary-card">
+      <div class="summary-row"><span>Total incidencias</span><strong>${total}</strong></div>
+      <div class="summary-row"><span>Verificadas en factura</span><strong style="color:var(--green)">${cobradas}</strong></div>
+      <div class="summary-row"><span>Pendientes de revisar</span><strong style="color:var(--red)">${pendientes}</strong></div>
+    </div>
+  `;
+
+  const listEl = document.getElementById('incidenciasList');
+  if (inciOrders.length === 0) {
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Sin incidencias en este periodo</div></div>';
+    return;
+  }
+
+  listEl.innerHTML = inciOrders.map(o => {
+    const d = new Date(o.date);
+    const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    const issues = (o.incidencias || []).filter(i => i.status !== 'ok');
+    return `
+      <div class="inc-table-row ${o.cobradoOk ? 'cobrado' : ''}">
+        <div class="inc-table-header">
+          <div>
+            <div class="inc-ref">${o.ref || 'Sin ref'}</div>
+            <div class="inc-meta">${dateStr} · ${o.provider} · ${o.resto === 1 ? 'Ravatxol' : 'Tabalet'} · 👤 ${o.user || '-'}</div>
+          </div>
+        </div>
+        ${issues.map(i => `
+          <div class="inc-product-line">
+            <strong>${i.name}</strong>
+            <span class="inc-issue-tag ${i.status}">${i.status === 'returned' ? '🔄 DEVUELTO' : '⚠️ INCIDENCIA'}</span>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px">
+              ${i.status === 'issue' && i.received !== undefined ? `Recibidos ${i.received} de los pedidos` : 'Devuelto al proveedor'}
+              ${i.note ? ` · 📝 ${i.note}` : ''}
+            </div>
+          </div>
+        `).join('')}
+        ${o.albaranPhoto ? `
+          <div class="photo-preview" style="margin-top:10px">
+            <img src="${o.albaranPhoto}" alt="Albarán" style="max-height:300px;object-fit:contain;background:var(--surface)" />
+          </div>
+        ` : '<div style="font-size:11px;color:var(--muted);margin-top:8px;font-style:italic">Sin foto del albarán</div>'}
+        <div class="cobrado-toggle ${o.cobradoOk ? 'checked' : ''}" onclick="toggleCobrado(${o.id})">
+          <div class="cobrado-checkbox">${o.cobradoOk ? '✓' : ''}</div>
+          <div class="cobrado-label">
+            ${o.cobradoOk ? '✅ Verificado en factura' : 'Marcar cuando comprobado en factura'}
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function toggleCobrado(orderId) {
+  const o = orders.find(o => o.id === orderId);
+  if (o) {
+    o.cobradoOk = !o.cobradoOk;
+    saveOrders();
+    renderIncidencias();
+    showToast(o.cobradoOk ? '✅ Marcado como verificado' : '↩️ Marcado como pendiente');
+  }
 }
 
 // ─── STATS ───────────────────────────────────────────────
@@ -2217,13 +3094,20 @@ function showTab(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const idx = ['nuevo','pedidos','panel','stock','usuarios','proveedores'].indexOf(name);
+  const idx = ['nuevo','pedidos','panel','stock','usuarios','proveedores','incidencias','albaranes','inventario'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name === 'pedidos') renderOrders();
   if (name === 'panel') updateStats();
   if (name === 'stock') { renderStock(); checkAlarms(); }
   if (name === 'usuarios') { renderUsersList(); }
   if (name === 'proveedores') { renderProveedoresList(); }
+  if (name === 'incidencias') {
+    renderIncidencias();
+    document.getElementById('inc-month-filter').onchange = renderIncidencias;
+    document.getElementById('inc-resto-filter').onchange = renderIncidencias;
+  }
+  if (name === 'albaranes') { renderAlbaranesList(); }
+  if (name === 'inventario') { renderInventario(); }
 }
 
 init();
