@@ -2005,7 +2005,7 @@ function renderOrders(filter) {
         ${o.note ? `<div class="order-note">📝 ${o.note}</div>` : ''}
         ${incSummary}
         ${actions ? `<div class="order-actions">${actions}</div>` : ''}
-        ${o.status === 'recibido' ? `
+        ${o.status === 'enviado' || o.status === 'recibido' ? `
           <div class="incidencia-panel" id="inc-panel-${o.id}">
             <div class="inc-title">📋 Registro de incidencias</div>
             ${incPanel}
@@ -2022,11 +2022,13 @@ function renderOrders(filter) {
             ` : ''}
             <button class="inc-save-btn" onclick="saveIncidencias(${o.id})">💾 Guardar incidencias</button>
           </div>
-          <div style="margin-top:8px;text-align:center">
-            <button onclick="toggleIncidencia(${o.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif">
-              ✏️ Editar incidencias
-            </button>
-          </div>
+          ${o.status === 'recibido' ? `
+            <div style="margin-top:8px;text-align:center">
+              <button onclick="toggleIncidencia(${o.id})" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Syne',sans-serif">
+                ✏️ Editar incidencias
+              </button>
+            </div>
+          ` : ''}
         ` : ''}
       </div>
     `;
@@ -2381,7 +2383,12 @@ async function cerrarInventarioMensual() {
 
 // ─── PROVIDER MANAGEMENT ────────────────────────────────
 // Always use providers from code, never from localStorage
-let appProviders = PROVIDERS;
+let appProviders = [];
+// Sync PROVIDERS to appProviders on load
+function syncProviders() {
+  appProviders = PROVIDERS.map(p => ({...p}));
+}
+syncProviders();
 
 function saveProviders() {
   PROVIDERS.length = 0;
