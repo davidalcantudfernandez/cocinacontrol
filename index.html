@@ -1516,8 +1516,6 @@ function loadUsers() {
 function saveUsers(users) {
   localStorage.setItem('appUsers', JSON.stringify(users));
 }
-// Clear old broken localStorage users and reload fresh
-localStorage.removeItem('appUsers');
 let USERS = loadUsers();
 
 let currentUser = null;
@@ -3774,7 +3772,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '1.8.0'; // Increment this with each update
+const APP_VERSION = '1.9.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
