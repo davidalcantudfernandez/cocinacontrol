@@ -807,9 +807,172 @@
   .prov-stock-group.open .prov-stock-products .stock-item:last-child {
     margin-bottom: 0;
   }
+
+  /* RECEPTION WIZARD */
+  .wizard-overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.8);
+    z-index: 600; display: none; align-items: center; justify-content: center;
+    overflow-y: auto; padding: 20px;
+  }
+  .wizard-overlay.open { display: flex; }
+  .wizard-container {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 24px; width: 100%; max-width: 430px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .wizard-step { display: none; }
+  .wizard-step.active { display: block; }
+  .wizard-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; margin-bottom: 8px; }
+  .wizard-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 20px; }
+  .wizard-progress {
+    display: flex; gap: 4px; margin-bottom: 20px;
+  }
+  .wizard-progress-dot {
+    flex: 1; height: 4px; background: var(--border); border-radius: 2px;
+  }
+  .wizard-progress-dot.active { background: var(--accent); }
+  .wizard-photo-preview {
+    border: 1.5px dashed var(--border); border-radius: 12px;
+    padding: 40px 20px; text-align: center; margin-bottom: 16px;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .wizard-photo-preview:active { transform: scale(0.98); }
+  .wizard-photo-preview.has-photo {
+    border-style: solid; border-color: var(--green); padding: 0;
+  }
+  .wizard-photo-preview img { width: 100%; border-radius: 10px; }
+  .wizard-btn-group { display: flex; gap: 10px; margin-top: 20px; }
+  .wizard-btn {
+    flex: 1; padding: 14px; border-radius: 12px;
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px;
+    border: none; cursor: pointer; transition: all 0.2s;
+  }
+  .wizard-btn:active { transform: scale(0.98); }
+  .wizard-btn-primary { background: var(--accent); color: white; }
+  .wizard-btn-secondary { background: var(--surface2); color: var(--text); border: 1.5px solid var(--border); }
+  .wizard-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .wizard-yes-no {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px;
+  }
+  .wizard-yes-no-btn {
+    padding: 20px; border-radius: 14px; border: 2px solid var(--border);
+    background: var(--surface2); cursor: pointer; transition: all 0.2s;
+    text-align: center;
+  }
+  .wizard-yes-no-btn:active { transform: scale(0.95); }
+  .wizard-yes-no-btn.selected { border-color: var(--accent); background: rgba(255,107,43,0.1); }
+  .wizard-yes-no-icon { font-size: 32px; margin-bottom: 8px; }
+  .wizard-yes-no-text { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 14px; }
+  .wizard-product-check {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; margin-bottom: 8px;
+  }
+  .wizard-product-name { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+  .wizard-product-qty { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .wizard-product-status {
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  .wizard-status-chip {
+    flex: 1; min-width: 80px; padding: 8px; border-radius: 8px;
+    border: 1.5px solid var(--border); background: none;
+    font-size: 11px; font-family: 'Syne', sans-serif; font-weight: 700;
+    cursor: pointer; text-align: center; transition: all 0.15s;
+  }
+  .wizard-status-chip:active { transform: scale(0.95); }
+  .wizard-status-chip.selected-ok { border-color: var(--green); color: var(--green); background: rgba(76,175,125,0.1); }
+  .wizard-status-chip.selected-issue { border-color: var(--red); color: var(--red); background: rgba(224,82,82,0.1); }
+  .wizard-status-chip.selected-returned { border-color: var(--accent2); color: var(--accent2); background: rgba(255,179,71,0.1); }
+  .wizard-extra-input {
+    width: 100%; background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px; color: var(--text);
+    font-size: 13px; margin-top: 6px;
+  }
+  .wizard-extra-input:focus { outline: none; border-color: var(--accent); }
+  .wizard-add-extra {
+    width: 100%; padding: 12px; border-radius: 10px;
+    border: 1.5px dashed var(--border); background: none;
+    color: var(--muted); font-family: 'Syne', sans-serif;
+    font-size: 12px; font-weight: 700; cursor: pointer;
+    margin-top: 12px; transition: all 0.2s;
+  }
+  .wizard-add-extra:active { transform: scale(0.98); }
+  .wizard-extra-item {
+    background: var(--surface); border: 1px solid var(--accent);
+    border-radius: 10px; padding: 10px; margin-top: 8px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .wizard-extra-remove {
+    background: var(--red); color: white; border: none;
+    width: 24px; height: 24px; border-radius: 50%;
+    font-size: 14px; cursor: pointer;
+  }
 </style>
 
 
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script>
+function generatePDF(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  
+  // Header
+  doc.setFontSize(20);
+  doc.text('PEDIDO', 105, 20, { align: 'center' });
+  
+  doc.setFontSize(12);
+  doc.text(`Ref: ${order.ref || order.id}`, 20, 35);
+  doc.text(`Fecha: ${new Date(order.date).toLocaleDateString('es-ES')}`, 20, 42);
+  doc.text(`Restaurante: ${order.resto === 1 ? 'Ravatxol' : 'Tabalet'}`, 20, 49);
+  doc.text(`Área: ${order.area === 'cocina' ? 'Cocina' : 'Sala'}`, 20, 56);
+  doc.text(`Proveedor: ${order.provider}`, 20, 63);
+  doc.text(`Usuario: ${order.user}`, 20, 70);
+  
+  // Line
+  doc.line(20, 75, 190, 75);
+  
+  // Products
+  doc.setFontSize(14);
+  doc.text('PRODUCTOS', 20, 85);
+  
+  doc.setFontSize(11);
+  let y = 95;
+  order.items.forEach((item, idx) => {
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.text(`${idx + 1}. ${item.provName || item.name}`, 25, y);
+    doc.text(`${item.qty} ${item.unit}`, 160, y);
+    y += 7;
+  });
+  
+  // Note
+  if (order.note) {
+    y += 5;
+    if (y > 270) {
+      doc.addPage();
+      y = 20;
+    }
+    doc.setFontSize(10);
+    doc.text('NOTA:', 20, y);
+    y += 7;
+    const lines = doc.splitTextToSize(order.note, 170);
+    doc.text(lines, 20, y);
+  }
+  
+  // Footer
+  doc.setFontSize(8);
+  doc.text('CocinaControl - Sistema de gestión de pedidos', 105, 285, { align: 'center' });
+  
+  // Download
+  doc.save(`pedido_${order.ref || order.id}.pdf`);
+  showToast('📄 PDF generado');
+}
+</script>
 </head>
 <body>
 
@@ -1236,6 +1399,76 @@
     </div>
     <button class="submit-btn" onclick="saveProduct()" style="margin-top:8px">💾 Guardar producto</button>
     <button onclick="closeProductModal()" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
+
+<!-- RECEPTION WIZARD -->
+<div class="wizard-overlay" id="receptionWizard">
+  <div class="wizard-container">
+    <div class="wizard-progress">
+      <div class="wizard-progress-dot active" id="wiz-dot-1"></div>
+      <div class="wizard-progress-dot" id="wiz-dot-2"></div>
+      <div class="wizard-progress-dot" id="wiz-dot-3"></div>
+      <div class="wizard-progress-dot" id="wiz-dot-4"></div>
+    </div>
+
+    <!-- STEP 1: Upload photo -->
+    <div class="wizard-step active" id="wiz-step-1">
+      <div class="wizard-title">📸 Foto del albarán</div>
+      <div class="wizard-subtitle">Sube la foto del albarán para registrar la recepción</div>
+      <input type="file" accept="image/*" capture="environment" style="display:none" id="wiz-photo-input" onchange="wizHandlePhoto(this)" />
+      <div class="wizard-photo-preview" id="wiz-photo-preview" onclick="document.getElementById('wiz-photo-input').click()">
+        <div style="font-size:48px;margin-bottom:8px">📷</div>
+        <div style="font-size:14px;font-weight:600">Pulsa para subir foto</div>
+      </div>
+      <div class="wizard-btn-group">
+        <button class="wizard-btn wizard-btn-secondary" onclick="closeReceptionWizard()">Cancelar</button>
+        <button class="wizard-btn wizard-btn-primary" id="wiz-btn-1" onclick="wizNextStep(2)" disabled>Siguiente</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: Any issues? -->
+    <div class="wizard-step" id="wiz-step-2">
+      <div class="wizard-title">⚠️ ¿Alguna incidencia?</div>
+      <div class="wizard-subtitle">¿Todo llegó correctamente o hubo algún problema?</div>
+      <div class="wizard-yes-no">
+        <div class="wizard-yes-no-btn" onclick="wizSelectIssue(false)">
+          <div class="wizard-yes-no-icon">✅</div>
+          <div class="wizard-yes-no-text">Todo OK</div>
+        </div>
+        <div class="wizard-yes-no-btn" onclick="wizSelectIssue(true)">
+          <div class="wizard-yes-no-icon">⚠️</div>
+          <div class="wizard-yes-no-text">Hay incidencias</div>
+        </div>
+      </div>
+      <div class="wizard-btn-group">
+        <button class="wizard-btn wizard-btn-secondary" onclick="wizPrevStep(1)">Atrás</button>
+      </div>
+    </div>
+
+    <!-- STEP 3: Review products -->
+    <div class="wizard-step" id="wiz-step-3">
+      <div class="wizard-title">📦 Revisar productos</div>
+      <div class="wizard-subtitle">Marca el estado de cada producto recibido</div>
+      <div id="wiz-products-list"></div>
+      <div class="wizard-btn-group">
+        <button class="wizard-btn wizard-btn-secondary" onclick="wizPrevStep(2)">Atrás</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="wizNextStep(4)">Siguiente</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: Extra items -->
+    <div class="wizard-step" id="wiz-step-4">
+      <div class="wizard-title">➕ Productos extra</div>
+      <div class="wizard-subtitle">¿Trajeron algo que no estaba en el pedido?</div>
+      <div id="wiz-extra-items"></div>
+      <button class="wizard-add-extra" onclick="wizAddExtraItem()">➕ Añadir producto extra</button>
+      <div class="wizard-btn-group">
+        <button class="wizard-btn wizard-btn-secondary" onclick="wizPrevStep(3)">Atrás</button>
+        <button class="wizard-btn wizard-btn-primary" onclick="wizFinish()">✅ Confirmar recepción</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -1947,11 +2180,12 @@ function renderOrders(filter) {
     const statusClass = { pendiente: 'status-pending', enviado: 'status-sent', recibido: 'status-received' }[o.status];
     const restoTag = `<span class="resto-tag r${o.resto}">R${o.resto}</span>`;
     const areaTag = o.area ? `<span class="resto-tag" style="background:${o.area==='cocina'?'rgba(255,179,71,0.15)':'rgba(76,175,125,0.15)'};color:${o.area==='cocina'?'#ffb347':'#4caf7d'}">${o.area==='cocina'?'🍳':'🍷'} ${o.area}</span>` : '';
+    const pdfBtn = `<button class="action-btn" style="background:var(--blue);padding:8px 12px;font-size:12px" onclick="generatePDF(${o.id})">📄 PDF</button>`;
     const actions = o.status === 'pendiente'
-      ? `<button class="action-btn blue" onclick="updateStatus(${o.id}, 'enviado')">Marcar enviado</button>`
+      ? `${pdfBtn}<button class="action-btn blue" onclick="updateStatus(${o.id}, 'enviado')">Marcar enviado</button>`
       : o.status === 'enviado'
-      ? `<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
-      : '';
+      ? `${pdfBtn}<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
+      : pdfBtn;
 
     // Build incidencia summary if exists
     let incSummary = '';
@@ -2625,6 +2859,15 @@ function renderUsersList() {
   `).join('');
 }
 
+function openNewUserModal() {
+  document.getElementById('editUserId').value = '';
+  document.getElementById('modal-user-name').value = '';
+  document.getElementById('modal-user-pass').value = '';
+  document.getElementById('modal-user-role').value = 'cocina';
+  document.getElementById('modal-user-resto').value = '1';
+  document.getElementById('userModal').classList.add('open');
+}
+
 function openUserModal(uid) {
   const user = USERS.find(u => u.id === uid);
   if (!user) return;
@@ -2645,9 +2888,6 @@ function closeUserModal(e) {
 
 function saveUserModal() {
   const uid = document.getElementById('editUserId').value;
-  const user = USERS.find(u => u.id === uid);
-  if (!user) return;
-
   const name = document.getElementById('modal-user-name').value.trim();
   const pass = document.getElementById('modal-user-pass').value.trim();
   const role = document.getElementById('modal-user-role').value;
@@ -2655,17 +2895,35 @@ function saveUserModal() {
 
   if (!name || !pass) { showToast('⚠️ Nombre y contraseña son obligatorios', '#e05252'); return; }
 
-  user.name = name;
-  user.pass = pass;
-  user.role = role;
-  user.resto = resto === 0 ? null : resto;
-  user.restoName = resto === 1 ? 'Ravatxol' : resto === 2 ? 'Tabalet' : 'Admin';
-  user.isAdmin = role === 'admin';
+  if (uid) {
+    // Edit existing
+    const user = USERS.find(u => u.id === uid);
+    if (!user) return;
+    user.name = name;
+    user.pass = pass;
+    user.role = role;
+    user.resto = resto === 0 ? null : resto;
+    user.restoName = resto === 1 ? 'Ravatxol' : resto === 2 ? 'Tabalet' : 'Admin';
+    user.isAdmin = role === 'admin';
+    showToast('✅ Usuario actualizado');
+  } else {
+    // Create new
+    const newUser = {
+      id: 'user_' + Date.now(),
+      name: name,
+      pass: pass,
+      role: role,
+      resto: resto === 0 ? null : resto,
+      restoName: resto === 1 ? 'Ravatxol' : resto === 2 ? 'Tabalet' : 'Admin',
+      isAdmin: role === 'admin'
+    };
+    USERS.push(newUser);
+    showToast('✅ Usuario ' + name + ' creado');
+  }
 
   saveUsers(USERS);
   renderUsersList();
   document.getElementById('userModal').classList.remove('open');
-  showToast('✅ Usuario ' + name + ' actualizado');
 }
 
 function createUser() {
@@ -2896,18 +3154,186 @@ function removeAlbaranPhoto(orderId) {
 
 
 // ─── RECEPTION FLOW ──────────────────────────────────────
+let wizCurrentOrder = null;
+let wizCurrentStep = 1;
+let wizPhoto = null;
+let wizHasIssues = null;
+let wizProductStatus = {};
+let wizExtraItems = [];
+
 function openReceptionFlow(orderId) {
   const order = orders.find(o => o.id === orderId);
   if (!order) return;
   
-  // Force show incidencia panel first
-  const panel = document.getElementById('inc-panel-' + orderId);
-  if (panel) {
-    panel.classList.add('open');
-    panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }
+  wizCurrentOrder = order;
+  wizCurrentStep = 1;
+  wizPhoto = null;
+  wizHasIssues = null;
+  wizProductStatus = {};
+  wizExtraItems = [];
   
-  showToast('📸 Sube foto del albarán y revisa productos', '#5b9cf6');
+  // Reset wizard
+  document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('wiz-step-1').classList.add('active');
+  document.getElementById('wiz-photo-input').value = '';
+  document.getElementById('wiz-photo-preview').innerHTML = `
+    <div style="font-size:48px;margin-bottom:8px">📷</div>
+    <div style="font-size:14px;font-weight:600">Pulsa para subir foto</div>
+  `;
+  document.getElementById('wiz-photo-preview').classList.remove('has-photo');
+  document.getElementById('wiz-btn-1').disabled = true;
+  wizUpdateProgress(1);
+  
+  document.getElementById('receptionWizard').classList.add('open');
+}
+
+function closeReceptionWizard() {
+  if (confirm('¿Cancelar la recepción?')) {
+    document.getElementById('receptionWizard').classList.remove('open');
+  }
+}
+
+async function wizHandlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  showToast('⏳ Comprimiendo imagen...', '#5b9cf6');
+  wizPhoto = await compressImage(file);
+  document.getElementById('wiz-photo-preview').innerHTML = `<img src="${wizPhoto}" alt="Albarán" />`;
+  document.getElementById('wiz-photo-preview').classList.add('has-photo');
+  document.getElementById('wiz-btn-1').disabled = false;
+  showToast('✅ Foto cargada');
+}
+
+function wizUpdateProgress(step) {
+  for (let i = 1; i <= 4; i++) {
+    const dot = document.getElementById('wiz-dot-' + i);
+    if (i <= step) dot.classList.add('active');
+    else dot.classList.remove('active');
+  }
+}
+
+function wizNextStep(step) {
+  document.querySelectorAll('.wizard-step').forEach(s => s.classList.remove('active'));
+  document.getElementById('wiz-step-' + step).classList.add('active');
+  wizCurrentStep = step;
+  wizUpdateProgress(step);
+  
+  if (step === 3) wizRenderProducts();
+  if (step === 4) wizRenderExtraItems();
+}
+
+function wizPrevStep(step) {
+  wizNextStep(step);
+}
+
+function wizSelectIssue(hasIssues) {
+  wizHasIssues = hasIssues;
+  document.querySelectorAll('.wizard-yes-no-btn').forEach(b => b.classList.remove('selected'));
+  event.target.closest('.wizard-yes-no-btn').classList.add('selected');
+  
+  if (hasIssues) {
+    setTimeout(() => wizNextStep(3), 300);
+  } else {
+    // Skip to step 4
+    setTimeout(() => wizNextStep(4), 300);
+  }
+}
+
+function wizRenderProducts() {
+  const el = document.getElementById('wiz-products-list');
+  el.innerHTML = wizCurrentOrder.items.map((item, idx) => {
+    const status = wizProductStatus[idx] || 'ok';
+    return `
+      <div class="wizard-product-check">
+        <div class="wizard-product-name">${item.name}</div>
+        <div class="wizard-product-qty">Pedido: ${item.qty} ${item.unit}</div>
+        <div class="wizard-product-status">
+          <button class="wizard-status-chip ${status === 'ok' ? 'selected-ok' : ''}" 
+            onclick="wizSetProductStatus(${idx}, 'ok')">✅ OK</button>
+          <button class="wizard-status-chip ${status === 'issue' ? 'selected-issue' : ''}" 
+            onclick="wizSetProductStatus(${idx}, 'issue')">⚠️ Cantidad</button>
+          <button class="wizard-status-chip ${status === 'returned' ? 'selected-returned' : ''}" 
+            onclick="wizSetProductStatus(${idx}, 'returned')">🔄 Devuelto</button>
+        </div>
+        ${status === 'issue' ? `
+          <input type="number" class="wizard-extra-input" placeholder="Cantidad recibida"
+            id="wiz-qty-${idx}" step="0.5" min="0" />
+          <input type="text" class="wizard-extra-input" placeholder="Nota (opcional)"
+            id="wiz-note-${idx}" />
+        ` : status === 'returned' ? `
+          <input type="text" class="wizard-extra-input" placeholder="Motivo de devolución"
+            id="wiz-note-${idx}" />
+        ` : ''}
+      </div>
+    `;
+  }).join('');
+}
+
+function wizSetProductStatus(idx, status) {
+  wizProductStatus[idx] = status;
+  wizRenderProducts();
+}
+
+function wizRenderExtraItems() {
+  const el = document.getElementById('wiz-extra-items');
+  el.innerHTML = wizExtraItems.map((item, idx) => `
+    <div class="wizard-extra-item">
+      <span>${item}</span>
+      <button class="wizard-extra-remove" onclick="wizRemoveExtra(${idx})">×</button>
+    </div>
+  `).join('');
+}
+
+function wizAddExtraItem() {
+  const name = prompt('Nombre del producto extra:');
+  if (name && name.trim()) {
+    wizExtraItems.push(name.trim());
+    wizRenderExtraItems();
+  }
+}
+
+function wizRemoveExtra(idx) {
+  wizExtraItems.splice(idx, 1);
+  wizRenderExtraItems();
+}
+
+function wizFinish() {
+  // Build incidencias
+  const incidencias = [];
+  wizCurrentOrder.items.forEach((item, idx) => {
+    const status = wizProductStatus[idx] || 'ok';
+    const inc = { name: item.name, status };
+    if (status === 'issue') {
+      const qtyEl = document.getElementById('wiz-qty-' + idx);
+      const noteEl = document.getElementById('wiz-note-' + idx);
+      inc.received = qtyEl ? parseFloat(qtyEl.value) : item.qty;
+      inc.note = noteEl ? noteEl.value : '';
+    } else if (status === 'returned') {
+      const noteEl = document.getElementById('wiz-note-' + idx);
+      inc.note = noteEl ? noteEl.value : '';
+    }
+    incidencias.push(inc);
+  });
+  
+  // Add extra items to note
+  let extraNote = wizExtraItems.length > 0 
+    ? '\n\n➕ Productos extra recibidos: ' + wizExtraItems.join(', ')
+    : '';
+  
+  wizCurrentOrder.albaranPhoto = wizPhoto;
+  wizCurrentOrder.incidencias = incidencias;
+  wizCurrentOrder.hasIncidencia = incidencias.some(i => i.status !== 'ok');
+  wizCurrentOrder.status = 'recibido';
+  wizCurrentOrder.receivedAt = new Date().toISOString();
+  wizCurrentOrder.receivedBy = currentUser ? currentUser.name : 'Desconocido';
+  if (wizCurrentOrder.note) wizCurrentOrder.note += extraNote;
+  else wizCurrentOrder.note = extraNote.trim();
+  
+  saveOrders();
+  renderOrders();
+  document.getElementById('receptionWizard').classList.remove('open');
+  
+  showToast(wizCurrentOrder.hasIncidencia ? '⚠️ Pedido recibido con incidencia' : '✅ Pedido recibido correctamente');
 }
 
 // ─── PHOTO UPLOAD ───────────────────────────────────────
@@ -2997,11 +3423,17 @@ function renderIncidencias() {
             <img src="${o.albaranPhoto}" alt="Albarán" style="max-height:300px;object-fit:contain;background:var(--surface)" />
           </div>
         ` : '<div style="font-size:11px;color:var(--muted);margin-top:8px;font-style:italic">Sin foto del albarán</div>'}
-        <div class="cobrado-toggle ${o.cobradoOk ? 'checked' : ''}" onclick="toggleCobrado(${o.id})">
-          <div class="cobrado-checkbox">${o.cobradoOk ? '✓' : ''}</div>
-          <div class="cobrado-label">
-            ${o.cobradoOk ? '✅ Verificado en factura' : 'Marcar cuando comprobado en factura'}
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <div class="cobrado-toggle ${o.cobradoOk ? 'checked' : ''}" onclick="toggleCobrado(${o.id})">
+            <div class="cobrado-checkbox">${o.cobradoOk ? '✓' : ''}</div>
+            <div class="cobrado-label">
+              ${o.cobradoOk ? '✅ Verificado en factura' : 'Marcar cuando comprobado en factura'}
+            </div>
           </div>
+          ${o.incidencias && o.incidencias.every(i => i.status === 'ok' || i.resolved) ? 
+            '<div style="font-size:12px;color:var(--green);padding:8px;background:rgba(76,175,125,0.1);border-radius:8px">✅ Todas las incidencias resueltas</div>' : 
+            '<div style="font-size:12px;color:var(--red);padding:8px;background:rgba(224,82,82,0.1);border-radius:8px">⚠️ Incidencias pendientes de resolver</div>'
+          }
         </div>
       </div>
     `;
@@ -3016,6 +3448,25 @@ function toggleCobrado(orderId) {
     renderIncidencias();
     showToast(o.cobradoOk ? '✅ Marcado como verificado' : '↩️ Marcado como pendiente');
   }
+}
+
+
+function toggleIncidenciaResolved(orderId, incIdx) {
+  event.stopPropagation();
+  const order = orders.find(o => o.id === orderId);
+  if (!order || !order.incidencias || !order.incidencias[incIdx]) return;
+  
+  order.incidencias[incIdx].resolved = !order.incidencias[incIdx].resolved;
+  
+  // Update order hasIncidencia if all resolved
+  const allResolved = order.incidencias.every(i => i.status === 'ok' || i.resolved);
+  if (allResolved && order.hasIncidencia) {
+    order.hasIncidencia = false;
+  }
+  
+  saveOrders();
+  renderOrders();
+  showToast(order.incidencias[incIdx].resolved ? '✅ Incidencia marcada como resuelta' : '↩️ Incidencia marcada como pendiente');
 }
 
 // ─── STATS ───────────────────────────────────────────────
