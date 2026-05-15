@@ -1008,9 +1008,9 @@ function generatePDF(orderId) {
   <button class="tab" onclick="showTab('panel')">Panel</button>
   <button class="tab" onclick="showTab('usuarios')" id="tab-btn-usuarios" style="display:none">👥 Usuarios</button>
   <button class="tab" onclick="showTab('proveedores')" id="tab-btn-proveedores" style="display:none">📦 Proveedores</button>
-  <button class="tab" onclick="showTab('incidencias')">⚠️ Incidencias</button>
-  <button class="tab" onclick="showTab('albaranes')" id="tab-btn-albaranes" style="display:none">📄 Albaranes</button>
-  <button class="tab" onclick="showTab('inventario')">📊 Inventario</button>
+  <button class="tab" onclick="showTab('incidencias')" id="tab-btn-incidencias" style="display:none">⚠️ Incidencias</button>
+  
+  
 </div>
 
 <!-- NUEVO PEDIDO -->
@@ -3552,7 +3552,7 @@ function showTab(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const idx = ['nuevo','pedidos','panel','stock','usuarios','proveedores','incidencias','albaranes','inventario'].indexOf(name);
+  const idx = ['nuevo','pedidos','usuarios','proveedores','incidencias'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name === 'pedidos') renderOrders();
   if (name === 'panel') updateStats();
@@ -3564,8 +3564,8 @@ function showTab(name) {
     document.getElementById('inc-month-filter').onchange = renderIncidencias;
     document.getElementById('inc-resto-filter').onchange = renderIncidencias;
   }
-  if (name === 'albaranes') { renderAlbaranesList(); }
-  if (name === 'inventario') { renderInventario(); }
+
+
 }
 
 init();
