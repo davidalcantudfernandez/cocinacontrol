@@ -1007,13 +1007,12 @@ function generatePDF(orderId) {
 </div>
 
 <div class="tabs">
-  <button class="tab active" onclick="showTab('nuevo')">Nuevo Pedido</button>
-  <button class="tab" onclick="showTab('pedidos')">Pedidos</button>
-  <button class="tab" onclick="showTab('usuarios')" id="tab-btn-usuarios" style="display:none">👥 Usuarios</button>
-  <button class="tab" onclick="showTab('proveedores')" id="tab-btn-proveedores" style="display:none">📦 Proveedores</button>
+  <button class="tab active" onclick="showTab('nuevo')">📦 Nuevo Pedido</button>
+  <button class="tab" onclick="showTab('pedidos')">📋 Pedidos</button>
+  <button class="tab" onclick="showTab('panel')" id="tab-btn-panel" style="display:none">📊 Panel</button>
   <button class="tab" onclick="showTab('incidencias')" id="tab-btn-incidencias" style="display:none">⚠️ Incidencias</button>
-  
-  
+  <button class="tab" onclick="showTab('proveedores')" id="tab-btn-proveedores" style="display:none">📦 Proveedores</button>
+  <button class="tab" onclick="showTab('usuarios')" id="tab-btn-usuarios" style="display:none">👥 Usuarios</button>
 </div>
 
 <!-- NUEVO PEDIDO -->
@@ -1555,7 +1554,11 @@ function doLogin() {
     document.querySelectorAll('.resto-selector')[0].style.opacity = '0.5';
     document.querySelectorAll('.resto-selector')[1].style.pointerEvents = 'none';
     document.querySelectorAll('.resto-selector')[1].style.opacity = '0.5';
-    const first = PROVIDERS.find(p => p.area === user.role);
+    const first = PROVIDERS.find(p => {
+      if (p.area !== user.role) return false;
+      if (p.resto === 'ambos' || p.resto === null || p.resto === undefined) return true;
+      return p.resto === user.resto;
+    });
     if (first) { selectedProvider = first; quantities = {}; }
   }
   renderProviders();
@@ -1993,7 +1996,7 @@ function quickOrder(providerId, productId) {
   const msg = `📦 *Pedido urgente ${restoName}*\n⚠️ Stock en mínimos\n\n• ${prod.name}: necesitamos reposición\n\n_Enviado desde CocinaControl_`;
   const encoded = encodeURIComponent(msg);
   const waUrl = prov.whatsapp ? `whatsapp://send?phone=${prov.whatsapp}&text=${encoded}` : `whatsapp://send?text=${encoded}`;
-  window.open(waUrl, '_blank');
+  window.location.href = waUrl;
 }
 
 let selectedResto = 1;
@@ -2160,11 +2163,12 @@ function submitOrder() {
   updateBadge();
   updateStats();
 
+  // Open WhatsApp IMMEDIATELY to preserve user gesture (browsers block delayed opens)
+  window.location.href = waUrl;
   showToast('✅ Abriendo WhatsApp...');
   setTimeout(() => {
-    window.open(waUrl, '_blank');
     showTab('pedidos');
-  }, 800);
+  }, 1500);
 }
 
 // ─── ORDERS LIST ─────────────────────────────────────────
@@ -3772,7 +3776,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '1.9.0'; // Increment this with each update
+const APP_VERSION = '2.1.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
