@@ -2227,7 +2227,12 @@ function submitOrder() {
 
   orders.unshift(order);
   saveOrders();
-  saveOrderToCloud(order);
+  // Save to cloud only if function is available
+  try {
+    if (typeof saveOrderToCloud === 'function') {
+      saveOrderToCloud(order);
+    }
+  } catch(e) { console.log('Cloud save error:', e); }
 
   // Build WhatsApp message
   const dateStr = new Date().toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -2245,24 +2250,33 @@ function submitOrder() {
     ? `https://wa.me/${phone}?text=${encoded}`
     : `https://wa.me/?text=${encoded}`;
 
-  quantities = {};
-  document.getElementById('orderNote').value = '';
-  renderProducts();
-  updateBadge();
-  updateStats();
+  // Open WhatsApp FIRST before anything else can fail
+  try {
+    const link = document.createElement('a');
+    link.href = waUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch(e) {
+    console.error('WhatsApp open error:', e);
+    // Fallback: direct location change
+    window.location.href = waUrl;
+  }
 
-  // Open WhatsApp using a real link click (most reliable on iOS)
-  const link = document.createElement('a');
-  link.href = waUrl;
-  link.target = '_blank';
-  link.rel = 'noopener noreferrer';
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  // Then clean up - errors here don't matter
+  try {
+    quantities = {};
+    document.getElementById('orderNote').value = '';
+    renderProducts();
+    updateBadge();
+    if (typeof updateStats === 'function') updateStats();
+  } catch(e) { console.log('Cleanup error:', e); }
   
   showToast('✅ Abriendo WhatsApp...');
   setTimeout(() => {
-    showTab('pedidos');
+    try { showTab('pedidos'); } catch(e) {}
   }, 1500);
 }
 
@@ -4237,7 +4251,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '2.8.0'; // Increment this with each update
+const APP_VERSION = '2.9.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
