@@ -1184,35 +1184,6 @@ function generatePDF(orderId) {
   <div id="ordersList"></div>
 </div>
 
-<!-- PANEL -->
-<div class="page" id="tab-panel">
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="stat-num" id="stat-total">0</div>
-      <div class="stat-label">Pedidos totales</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="stat-pending">0</div>
-      <div class="stat-label">Pendientes</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="stat-r1">0</div>
-      <div class="stat-label">Ravatxol pedidos</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-num" id="stat-r2">0</div>
-      <div class="stat-label">Tabalet pedidos</div>
-    </div>
-  </div>
-
-  <div class="section-title">Por proveedor</div>
-  <div id="providerStats"></div>
-
-  <div class="section-title">Últimos pedidos</div>
-  <div id="recentOrders"></div>
-</div>
-
-
 <!-- STOCK (oculto, queda como inventario en otra pestaña) -->
 <div class="page" id="tab-stock" style="display:none !important">
   <div class="alarm-banner" id="alarmBanner" style="display:none">
@@ -4252,7 +4223,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '2.4.0'; // Increment this with each update
+const APP_VERSION = '2.5.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
