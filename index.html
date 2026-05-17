@@ -914,9 +914,21 @@
 
 
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
 <script>
-function generatePDF(orderId) {
+// Fallback loader for jsPDF if first attempt fails
+window.addEventListener('DOMContentLoaded', function() {
+  if (!window.jspdf) {
+    console.log('jsPDF not loaded, trying fallback...');
+    const fallback = document.createElement('script');
+    fallback.src = 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
+    document.head.appendChild(fallback);
+  }
+});
+</script>
+<script>
+function generatePDF(orderId, retries) {
+  retries = retries || 0;
   try {
     const order = orders.find(o => o.id === orderId);
     if (!order) {
@@ -924,9 +936,22 @@ function generatePDF(orderId) {
       return;
     }
     
+    // If jsPDF not loaded yet, retry up to 10 times
     if (!window.jspdf) {
-      showToast('⚠️ Librería PDF no cargada, intenta de nuevo', '#e05252');
-      return;
+      if (retries < 10) {
+        console.log('jsPDF not ready, retry ' + (retries + 1));
+        showToast('⏳ Cargando librería PDF...', '#5b9cf6');
+        setTimeout(() => generatePDF(orderId, retries + 1), 500);
+        return;
+      } else {
+        // Last resort: load it now
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js';
+        script.onload = () => generatePDF(orderId, 0);
+        script.onerror = () => showToast('❌ No se pudo cargar PDF', '#e05252');
+        document.head.appendChild(script);
+        return;
+      }
     }
     
     const { jsPDF } = window.jspdf;
@@ -2373,10 +2398,12 @@ function submitOrder() {
     ? `https://wa.me/${phone}?text=${encoded}`
     : `https://wa.me/?text=${encoded}`;
 
-  // Generate PDF first
+  // Generate PDF - this will retry if library not ready
   try {
     if (typeof generatePDF === 'function') {
       generatePDF(order.id);
+    } else {
+      console.log('generatePDF function not available');
     }
   } catch(e) { console.log('PDF error:', e); }
   
@@ -4425,7 +4452,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '3.2.0'; // Increment this with each update
+const APP_VERSION = '3.3.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
