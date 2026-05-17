@@ -1009,6 +1009,7 @@ function generatePDF(orderId) {
 <div class="tabs">
   <button class="tab active" onclick="showTab('nuevo')">📦 Nuevo Pedido</button>
   <button class="tab" onclick="showTab('pedidos')">📋 Pedidos</button>
+  <button class="tab" onclick="showTab('producciones')" id="tab-btn-producciones" style="display:none">🍳 Producciones</button>
   <button class="tab" onclick="showTab('panel')" id="tab-btn-panel" style="display:none">📊 Panel</button>
   <button class="tab" onclick="showTab('incidencias')" id="tab-btn-incidencias" style="display:none">⚠️ Incidencias</button>
   <button class="tab" onclick="showTab('proveedores')" id="tab-btn-proveedores" style="display:none">📦 Proveedores</button>
@@ -1064,6 +1065,111 @@ function generatePDF(orderId) {
   <div id="panelSummaryCards"></div>
 </div>
 
+
+<!-- PRODUCCIONES -->
+<div class="page" id="tab-producciones">
+  <div class="filter-bar" style="margin-bottom:16px">
+    <button class="filter-chip active" onclick="switchProdMode('today', this)">📝 Hoy</button>
+    <button class="filter-chip" onclick="switchProdMode('list', this)">📋 Lista maestra</button>
+    <button class="filter-chip" onclick="switchProdMode('history', this)">📊 Histórico</button>
+  </div>
+
+  <!-- TODAY VIEW (cocineros marcan cantidades) -->
+  <div id="prod-today-view">
+    <div class="section-title">Producciones de hoy</div>
+    
+    <div id="today-info" class="prov-card" style="margin-bottom:16px;background:rgba(255,107,43,0.08);border-color:var(--accent)">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px" id="today-date"></div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px" id="today-type"></div>
+        </div>
+        <button onclick="toggleFestivo()" id="festivo-btn" style="background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:8px 14px;color:var(--text);font-family:'Syne',sans-serif;font-weight:700;font-size:11px;cursor:pointer">
+          🎉 Festivo
+        </button>
+      </div>
+    </div>
+
+    <div id="producciones-list"></div>
+
+    <button class="submit-btn" onclick="saveProducciones()" style="margin-top:16px">
+      💾 Guardar producciones del día
+    </button>
+  </div>
+
+  <!-- MASTER LIST VIEW (admin creates/edits items) -->
+  <div id="prod-list-view" style="display:none">
+    <div class="section-title">Lista maestra de producciones</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+      Define los productos que se deben preparar cada día. Puedes configurar cantidad normal y para festivos.
+    </p>
+    
+    <button class="submit-btn" style="margin-bottom:20px;background:var(--green)" onclick="openNewProdItemModal()">
+      ➕ Añadir producto
+    </button>
+
+    <div id="prod-master-list"></div>
+  </div>
+
+  <!-- HISTORY VIEW -->
+  <div id="prod-history-view" style="display:none">
+    <div class="section-title">Histórico de producciones</div>
+    <div class="month-selector" style="margin-bottom:16px">
+      <select id="prod-history-date" onchange="renderProdHistory()">
+        <option value="">Selecciona fecha</option>
+      </select>
+    </div>
+    <div id="prod-history-list"></div>
+  </div>
+</div>
+
+<!-- MODAL NUEVO/EDITAR PRODUCTO PRODUCCION -->
+<div class="modal-overlay" id="prodItemModal" onclick="closeProdItemModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-title" id="prodItemModalTitle">Nuevo producto</div>
+    <input type="hidden" id="editProdItemId" />
+
+    <div class="form-row">
+      <label class="form-label">Nombre del producto</label>
+      <input class="form-input" id="prod-item-name" placeholder="Ej: Salsa carbonara" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Categoría</label>
+      <select class="form-select" id="prod-item-category">
+        <option value="Salsas">Salsas</option>
+        <option value="Mise en place">Mise en place</option>
+        <option value="Bases">Bases</option>
+        <option value="Postres">Postres</option>
+        <option value="Verduras">Verduras</option>
+        <option value="Carnes">Carnes</option>
+        <option value="Pescados">Pescados</option>
+        <option value="Otros">Otros</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Cantidad normal</label>
+      <div style="display:flex;gap:8px;align-items:center">
+        <input class="form-input" id="prod-item-qty-normal" type="number" step="0.5" placeholder="1" style="flex:1" />
+        <select class="form-select" id="prod-item-unit" style="flex:1">
+          <option value="cubo">cubo</option>
+          <option value="botella">botella</option>
+          <option value="bandeja">bandeja</option>
+          <option value="bol">bol</option>
+          <option value="kg">kg</option>
+          <option value="L">L</option>
+          <option value="ud">unidad</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Cantidad festivo/fin de semana</label>
+      <input class="form-input" id="prod-item-qty-festivo" type="number" step="0.5" placeholder="2" />
+    </div>
+    <button class="submit-btn" onclick="saveProdItem()" style="margin-top:8px">💾 Guardar</button>
+    <button onclick="closeProdItemModal()" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
 <!-- PEDIDOS -->
 <div class="page" id="tab-pedidos">
   <div class="filter-bar">
@@ -1108,7 +1214,7 @@ function generatePDF(orderId) {
 
 
 <!-- STOCK (oculto, queda como inventario en otra pestaña) -->
-<div class="page" id="tab-stock" style="display:none" style="display:none">
+<div class="page" id="tab-stock" style="display:none !important">
   <div class="alarm-banner" id="alarmBanner" style="display:none">
     <div class="alarm-banner-title">🚨 Stock en mínimos</div>
     <div id="alarmList"></div>
@@ -1212,7 +1318,14 @@ function generatePDF(orderId) {
 <div class="page" id="tab-incidencias">
   <div class="section-title">Resumen de incidencias</div>
 
+  <div class="filter-bar" style="margin-bottom:12px">
+    <button class="filter-chip active" onclick="filterIncStatus('pending', this)">⚠️ Pendientes</button>
+    <button class="filter-chip" onclick="filterIncStatus('resolved', this)">✅ Resueltas</button>
+    <button class="filter-chip" onclick="filterIncStatus('all', this)">Todas</button>
+  </div>
+  
   <div class="month-selector">
+    <input type="hidden" id="inc-status-filter" value="pending" />
     <select id="inc-month-filter">
       <option value="all">Todos los meses</option>
       <option value="01">Enero</option>
@@ -1965,7 +2078,7 @@ function renderStock() {
   el.innerHTML = html;
 }
 
-function checkAlarms() {
+function checkAlarms() { return; // Disabled - stock removed
   const alerts = [];
   PROVIDERS.forEach(prov => {
     prov.products.forEach(prod => {
@@ -1984,9 +2097,7 @@ function checkAlarms() {
   } else {
     banner.classList.remove('show');
   }
-  // Update stock tab indicator
-  const stockTab = document.querySelectorAll('.tab')[3];
-  if (stockTab) stockTab.textContent = alerts.length > 0 ? `🔴 Stock (${alerts.length})` : 'Stock';
+  // Stock tab removed - no indicator needed
 }
 
 function quickOrder(providerId, productId) {
@@ -3378,9 +3489,18 @@ function removePhoto(orderId) {
 }
 
 // ─── INCIDENCIAS PANEL (ADMIN) ──────────────────────────
+let openIncOrders = new Set();
+
+function toggleIncOrder(orderId) {
+  if (openIncOrders.has(orderId)) openIncOrders.delete(orderId);
+  else openIncOrders.add(orderId);
+  renderIncidencias();
+}
+
 function renderIncidencias() {
   const monthFilter = document.getElementById('inc-month-filter').value;
   const restoFilter = document.getElementById('inc-resto-filter').value;
+  const statusFilter = document.getElementById('inc-status-filter') ? document.getElementById('inc-status-filter').value : 'pending';
 
   let inciOrders = orders.filter(o => o.hasIncidencia);
   if (monthFilter !== 'all') {
@@ -3392,23 +3512,34 @@ function renderIncidencias() {
   if (restoFilter !== 'all') {
     inciOrders = inciOrders.filter(o => o.resto === parseInt(restoFilter));
   }
+  
+  // Filter by resolution status
+  if (statusFilter === 'pending') {
+    inciOrders = inciOrders.filter(o => !o.allResolved);
+  } else if (statusFilter === 'resolved') {
+    inciOrders = inciOrders.filter(o => o.allResolved);
+  }
 
   // Summary
-  const total = inciOrders.length;
-  const cobradas = inciOrders.filter(o => o.cobradoOk).length;
-  const pendientes = total - cobradas;
+  const allInci = orders.filter(o => o.hasIncidencia);
+  const total = allInci.length;
+  const resolved = allInci.filter(o => o.allResolved).length;
+  const pending = total - resolved;
+  
   const summaryEl = document.getElementById('incidenciasSummary');
-  summaryEl.innerHTML = total === 0 ? '' : `
+  summaryEl.innerHTML = `
     <div class="summary-card">
       <div class="summary-row"><span>Total incidencias</span><strong>${total}</strong></div>
-      <div class="summary-row"><span>Verificadas en factura</span><strong style="color:var(--green)">${cobradas}</strong></div>
-      <div class="summary-row"><span>Pendientes de revisar</span><strong style="color:var(--red)">${pendientes}</strong></div>
+      <div class="summary-row"><span>Resueltas</span><strong style="color:var(--green)">${resolved}</strong></div>
+      <div class="summary-row"><span>Pendientes</span><strong style="color:var(--red)">${pending}</strong></div>
     </div>
   `;
 
   const listEl = document.getElementById('incidenciasList');
   if (inciOrders.length === 0) {
-    listEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">Sin incidencias en este periodo</div></div>';
+    listEl.innerHTML = '<div class="empty"><div class="empty-icon">✅</div><div class="empty-text">' + 
+      (statusFilter === 'resolved' ? 'No hay incidencias resueltas' : 'Sin incidencias pendientes') + 
+      '</div></div>';
     return;
   }
 
@@ -3416,44 +3547,90 @@ function renderIncidencias() {
     const d = new Date(o.date);
     const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
     const issues = (o.incidencias || []).filter(i => i.status !== 'ok');
+    const isOpen = openIncOrders.has(o.id);
+    const unresolvedCount = issues.filter(i => !i.resolved).length;
+    const allResolved = unresolvedCount === 0;
+    
     return `
-      <div class="inc-table-row ${o.cobradoOk ? 'cobrado' : ''}">
-        <div class="inc-table-header">
-          <div>
+      <div class="inc-table-row ${allResolved ? 'cobrado' : ''}" style="cursor:pointer;padding:0;overflow:hidden">
+        <div onclick="toggleIncOrder(${o.id})" style="padding:14px;display:flex;align-items:center;justify-content:space-between">
+          <div style="flex:1;min-width:0">
             <div class="inc-ref">${o.ref || 'Sin ref'}</div>
-            <div class="inc-meta">${dateStr} · ${o.provider} · ${o.resto === 1 ? 'Ravatxol' : 'Tabalet'} · 👤 ${o.user || '-'}</div>
-          </div>
-        </div>
-        ${issues.map(i => `
-          <div class="inc-product-line">
-            <strong>${i.name}</strong>
-            <span class="inc-issue-tag ${i.status}">${i.status === 'returned' ? '🔄 DEVUELTO' : '⚠️ INCIDENCIA'}</span>
-            <div style="font-size:12px;color:var(--muted);margin-top:3px">
-              ${i.status === 'issue' && i.received !== undefined ? `Recibidos ${i.received} de los pedidos` : 'Devuelto al proveedor'}
-              ${i.note ? ` · 📝 ${i.note}` : ''}
+            <div class="inc-meta">${dateStr} · ${o.provider}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px">
+              ${o.resto === 1 ? '🏠 Ravatxol' : '🏡 Tabalet'} · 👤 ${o.user || '-'}
             </div>
           </div>
-        `).join('')}
-        ${o.albaranPhoto ? `
-          <div class="photo-preview" style="margin-top:10px">
-            <img src="${o.albaranPhoto}" alt="Albarán" style="max-height:300px;object-fit:contain;background:var(--surface)" />
+          <div style="display:flex;align-items:center;gap:10px">
+            ${allResolved ? 
+              '<span style="background:rgba(76,175,125,0.15);color:var(--green);padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;font-family:Syne,sans-serif">✅ RESUELTA</span>' :
+              `<span style="background:rgba(224,82,82,0.15);color:var(--red);padding:4px 10px;border-radius:12px;font-size:11px;font-weight:700;font-family:Syne,sans-serif">⚠️ ${unresolvedCount} PENDIENTE${unresolvedCount > 1 ? 'S' : ''}</span>`
+            }
+            <span style="font-size:18px;color:var(--muted);transition:transform 0.2s;display:inline-block;${isOpen ? 'transform:rotate(180deg)' : ''}">▼</span>
           </div>
-        ` : '<div style="font-size:11px;color:var(--muted);margin-top:8px;font-style:italic">Sin foto del albarán</div>'}
-        <div style="display:flex;flex-direction:column;gap:8px">
-          <div class="cobrado-toggle ${o.cobradoOk ? 'checked' : ''}" onclick="toggleCobrado(${o.id})">
-            <div class="cobrado-checkbox">${o.cobradoOk ? '✓' : ''}</div>
-            <div class="cobrado-label">
-              ${o.cobradoOk ? '✅ Verificado en factura' : 'Marcar cuando comprobado en factura'}
-            </div>
-          </div>
-          ${o.incidencias && o.incidencias.every(i => i.status === 'ok' || i.resolved) ? 
-            '<div style="font-size:12px;color:var(--green);padding:8px;background:rgba(76,175,125,0.1);border-radius:8px">✅ Todas las incidencias resueltas</div>' : 
-            '<div style="font-size:12px;color:var(--red);padding:8px;background:rgba(224,82,82,0.1);border-radius:8px">⚠️ Incidencias pendientes de resolver</div>'
-          }
         </div>
+        
+        ${isOpen ? `
+          <div style="padding:0 14px 14px;border-top:1px solid var(--border)" onclick="event.stopPropagation()">
+            ${issues.map((i, idx) => `
+              <div style="background:var(--surface);border-radius:10px;padding:12px;margin-top:10px;border:1px solid ${i.resolved ? 'var(--green)' : 'var(--red)'}">
+                <div style="display:flex;align-items:start;justify-content:space-between;gap:10px">
+                  <div style="flex:1">
+                    <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">
+                      <strong style="font-size:14px">${i.name}</strong>
+                      <span class="inc-issue-tag ${i.status}" style="font-size:9px">${i.status === 'returned' ? '🔄 DEVUELTO' : '⚠️ INCIDENCIA'}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--muted)">
+                      ${i.status === 'issue' && i.received !== undefined ? `Recibidos ${i.received} de los pedidos` : 'Devuelto al proveedor'}
+                      ${i.note ? ` · 📝 ${i.note}` : ''}
+                    </div>
+                  </div>
+                </div>
+                
+                <button 
+                  onclick="resolveIncidencia(${o.id}, ${idx})" 
+                  style="width:100%;margin-top:10px;padding:10px;border-radius:8px;border:1.5px solid ${i.resolved ? 'var(--green)' : 'var(--accent)'};background:${i.resolved ? 'rgba(76,175,125,0.1)' : 'var(--accent)'};color:${i.resolved ? 'var(--green)' : 'white'};font-family:Syne,sans-serif;font-weight:700;font-size:12px;cursor:pointer">
+                  ${i.resolved ? '✅ RESUELTA · Pulsa para reabrir' : '✓ MARCAR COMO RESUELTA'}
+                </button>
+              </div>
+            `).join('')}
+            
+            ${o.albaranPhoto ? `
+              <div style="margin-top:14px">
+                <div style="font-size:11px;color:var(--muted);margin-bottom:6px;font-weight:600">📸 FOTO DEL ALBARÁN:</div>
+                <img src="${o.albaranPhoto}" alt="Albarán" style="width:100%;max-height:400px;object-fit:contain;background:var(--surface);border-radius:10px;border:1px solid var(--border)" />
+              </div>
+            ` : '<div style="font-size:11px;color:var(--muted);margin-top:10px;font-style:italic;text-align:center">Sin foto del albarán</div>'}
+            
+            ${allResolved ? `
+              <div class="cobrado-toggle ${o.cobradoOk ? 'checked' : ''}" style="margin-top:14px" onclick="toggleCobrado(${o.id})">
+                <div class="cobrado-checkbox">${o.cobradoOk ? '✓' : ''}</div>
+                <div class="cobrado-label">
+                  ${o.cobradoOk ? '✅ Verificado en factura' : 'Marcar cuando comprobado en factura'}
+                </div>
+              </div>
+            ` : ''}
+          </div>
+        ` : ''}
       </div>
     `;
   }).join('');
+}
+
+function resolveIncidencia(orderId, incIdx) {
+  event.stopPropagation();
+  const order = orders.find(o => o.id === orderId);
+  if (!order || !order.incidencias || !order.incidencias[incIdx]) return;
+  
+  order.incidencias[incIdx].resolved = !order.incidencias[incIdx].resolved;
+  
+  // Check if all incidencias are resolved
+  const issues = order.incidencias.filter(i => i.status !== 'ok');
+  order.allResolved = issues.every(i => i.resolved);
+  
+  saveOrders();
+  renderIncidencias();
+  showToast(order.incidencias[incIdx].resolved ? '✅ Incidencia resuelta' : '↩️ Incidencia reabierta');
 }
 
 function toggleCobrado(orderId) {
@@ -3485,6 +3662,304 @@ function toggleIncidenciaResolved(orderId, incIdx) {
   showToast(order.incidencias[incIdx].resolved ? '✅ Incidencia marcada como resuelta' : '↩️ Incidencia marcada como pendiente');
 }
 
+
+
+// ─── PRODUCCIONES ───────────────────────────────────────
+let prodItems = JSON.parse(localStorage.getItem('prodItems') || '[]');
+let prodMode = 'today';
+let prodToday = JSON.parse(localStorage.getItem('prodToday_' + new Date().toISOString().split('T')[0]) || '{}');
+let isFestivo = false;
+
+function isWeekend() {
+  const day = new Date().getDay();
+  return day === 0 || day === 6 || day === 5; // Friday, Saturday, Sunday
+}
+
+function saveProdItems() {
+  localStorage.setItem('prodItems', JSON.stringify(prodItems));
+}
+
+function switchProdMode(mode, btn) {
+  prodMode = mode;
+  btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+
+  document.getElementById('prod-today-view').style.display = mode === 'today' ? 'block' : 'none';
+  document.getElementById('prod-list-view').style.display = mode === 'list' ? 'block' : 'none';
+  document.getElementById('prod-history-view').style.display = mode === 'history' ? 'block' : 'none';
+
+  if (mode === 'today') renderProdToday();
+  if (mode === 'list') renderProdMasterList();
+  if (mode === 'history') loadProdHistory();
+}
+
+function toggleFestivo() {
+  isFestivo = !isFestivo;
+  const btn = document.getElementById('festivo-btn');
+  if (isFestivo) {
+    btn.style.background = 'var(--accent)';
+    btn.style.color = 'white';
+    btn.textContent = '🎉 Festivo ✓';
+  } else {
+    btn.style.background = 'var(--surface2)';
+    btn.style.color = 'var(--text)';
+    btn.textContent = '🎉 Festivo';
+  }
+  renderProdToday();
+}
+
+function renderProdToday() {
+  const dateEl = document.getElementById('today-date');
+  const typeEl = document.getElementById('today-type');
+  const today = new Date();
+  const dateStr = today.toLocaleDateString('es-ES', { weekday: 'long', day: 'numeric', month: 'long' });
+  if (dateEl) dateEl.textContent = '📅 ' + dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+  
+  const weekend = isWeekend();
+  const useDouble = weekend || isFestivo;
+  if (typeEl) typeEl.textContent = useDouble ? '⚡ Cantidades dobles (festivo/fin de semana)' : '📊 Cantidades normales';
+  
+  const el = document.getElementById('producciones-list');
+  if (!el) return;
+  
+  if (prodItems.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">🍳</div><div class="empty-text">El jefe de cocina aún no ha creado la lista</div></div>';
+    return;
+  }
+  
+  // Group by category
+  const grouped = {};
+  prodItems.forEach(item => {
+    const cat = item.category || 'Otros';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(item);
+  });
+  
+  let html = '';
+  Object.keys(grouped).forEach(cat => {
+    html += `<div class="section-title" style="margin-top:16px;margin-bottom:8px;font-size:14px">${cat}</div>`;
+    html += grouped[cat].map(item => {
+      const targetQty = useDouble && item.qtyFestivo ? item.qtyFestivo : item.qtyNormal;
+      const current = prodToday[item.id];
+      const hasValue = current !== undefined && current !== null && current !== '';
+      const enough = hasValue && parseFloat(current) >= targetQty;
+      
+      return `
+        <div class="stock-item" style="margin-bottom:8px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <div style="flex:1">
+              <div class="stock-name">${item.name}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">
+                Objetivo: <strong style="color:var(--accent)">${targetQty} ${item.unit}</strong>
+              </div>
+            </div>
+            ${hasValue ? `<div style="font-size:20px">${enough ? '✅' : '⚠️'}</div>` : ''}
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <span style="font-size:12px;color:var(--muted)">Cantidad realizada:</span>
+            <input type="number" min="0" step="0.5" value="${current || ''}"
+              onchange="updateProdCount('${item.id}', this.value)"
+              placeholder="0"
+              style="flex:1;background:var(--surface);border:1.5px solid ${hasValue ? (enough ? 'var(--green)' : 'var(--red)') : 'var(--border)'};border-radius:8px;padding:8px;color:var(--text);font-family:'Syne',sans-serif;font-size:14px;font-weight:700;text-align:center" />
+            <span style="font-size:12px;color:var(--muted)">${item.unit}</span>
+          </div>
+        </div>
+      `;
+    }).join('');
+  });
+  
+  el.innerHTML = html;
+}
+
+function updateProdCount(itemId, value) {
+  prodToday[itemId] = parseFloat(value) || 0;
+  renderProdToday();
+}
+
+function saveProducciones() {
+  const dateKey = new Date().toISOString().split('T')[0];
+  prodToday._savedAt = new Date().toISOString();
+  prodToday._savedBy = currentUser ? currentUser.name : 'Desconocido';
+  prodToday._festivo = isFestivo;
+  localStorage.setItem('prodToday_' + dateKey, JSON.stringify(prodToday));
+  
+  // Also save to a list of dates
+  const dates = JSON.parse(localStorage.getItem('prodDates') || '[]');
+  if (!dates.includes(dateKey)) {
+    dates.push(dateKey);
+    localStorage.setItem('prodDates', JSON.stringify(dates));
+  }
+  
+  showToast('✅ Producciones guardadas');
+}
+
+// MASTER LIST
+function renderProdMasterList() {
+  const el = document.getElementById('prod-master-list');
+  if (!el) return;
+  
+  if (prodItems.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">Aún no has añadido productos</div></div>';
+    return;
+  }
+  
+  const grouped = {};
+  prodItems.forEach(item => {
+    const cat = item.category || 'Otros';
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(item);
+  });
+  
+  let html = '';
+  Object.keys(grouped).forEach(cat => {
+    html += `<div class="section-title" style="margin-top:16px;font-size:14px">${cat}</div>`;
+    html += grouped[cat].map(item => `
+      <div class="prov-card">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div style="flex:1">
+            <div class="prov-card-name">${item.name}</div>
+            <div class="prov-card-contact">
+              📊 Normal: <strong>${item.qtyNormal} ${item.unit}</strong>
+              ${item.qtyFestivo ? ` · 🎉 Festivo: <strong>${item.qtyFestivo} ${item.unit}</strong>` : ''}
+            </div>
+          </div>
+          <div class="prov-card-actions">
+            <button class="prov-btn blue" onclick="openEditProdItemModal('${item.id}')">✏️</button>
+            <button class="prov-btn red" onclick="deleteProdItem('${item.id}')">🗑️</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  });
+  
+  el.innerHTML = html;
+}
+
+function openNewProdItemModal() {
+  document.getElementById('prodItemModalTitle').textContent = 'Nuevo producto';
+  document.getElementById('editProdItemId').value = '';
+  document.getElementById('prod-item-name').value = '';
+  document.getElementById('prod-item-category').value = 'Salsas';
+  document.getElementById('prod-item-qty-normal').value = '';
+  document.getElementById('prod-item-qty-festivo').value = '';
+  document.getElementById('prod-item-unit').value = 'cubo';
+  document.getElementById('prodItemModal').classList.add('open');
+}
+
+function openEditProdItemModal(itemId) {
+  const item = prodItems.find(i => i.id === itemId);
+  if (!item) return;
+  document.getElementById('prodItemModalTitle').textContent = 'Editar producto';
+  document.getElementById('editProdItemId').value = itemId;
+  document.getElementById('prod-item-name').value = item.name;
+  document.getElementById('prod-item-category').value = item.category || 'Otros';
+  document.getElementById('prod-item-qty-normal').value = item.qtyNormal;
+  document.getElementById('prod-item-qty-festivo').value = item.qtyFestivo || '';
+  document.getElementById('prod-item-unit').value = item.unit || 'cubo';
+  document.getElementById('prodItemModal').classList.add('open');
+}
+
+function closeProdItemModal(e) {
+  if (!e || e.target === document.getElementById('prodItemModal')) {
+    document.getElementById('prodItemModal').classList.remove('open');
+  }
+}
+
+function saveProdItem() {
+  const id = document.getElementById('editProdItemId').value;
+  const name = document.getElementById('prod-item-name').value.trim();
+  const category = document.getElementById('prod-item-category').value;
+  const qtyNormal = parseFloat(document.getElementById('prod-item-qty-normal').value);
+  const qtyFestivo = parseFloat(document.getElementById('prod-item-qty-festivo').value) || null;
+  const unit = document.getElementById('prod-item-unit').value;
+  
+  if (!name || !qtyNormal) { showToast('⚠️ Nombre y cantidad obligatorios', '#e05252'); return; }
+  
+  if (id) {
+    const item = prodItems.find(i => i.id === id);
+    if (item) { 
+      item.name = name; item.category = category; 
+      item.qtyNormal = qtyNormal; item.qtyFestivo = qtyFestivo; item.unit = unit;
+    }
+  } else {
+    prodItems.push({
+      id: 'prod_' + Date.now(),
+      name, category, qtyNormal, qtyFestivo, unit
+    });
+  }
+  
+  saveProdItems();
+  renderProdMasterList();
+  document.getElementById('prodItemModal').classList.remove('open');
+  showToast('✅ Producto guardado');
+}
+
+function deleteProdItem(itemId) {
+  if (!confirm('¿Eliminar este producto de la lista?')) return;
+  prodItems = prodItems.filter(i => i.id !== itemId);
+  saveProdItems();
+  renderProdMasterList();
+  showToast('🗑️ Producto eliminado');
+}
+
+// HISTORY
+function loadProdHistory() {
+  const dates = JSON.parse(localStorage.getItem('prodDates') || '[]');
+  const sel = document.getElementById('prod-history-date');
+  sel.innerHTML = '<option value="">Selecciona fecha</option>' + 
+    dates.sort().reverse().map(d => {
+      const date = new Date(d);
+      const label = date.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      return `<option value="${d}">${label}</option>`;
+    }).join('');
+}
+
+function renderProdHistory() {
+  const dateKey = document.getElementById('prod-history-date').value;
+  const el = document.getElementById('prod-history-list');
+  if (!dateKey) { el.innerHTML = ''; return; }
+  
+  const data = JSON.parse(localStorage.getItem('prodToday_' + dateKey) || '{}');
+  const wasFestivo = data._festivo;
+  const savedBy = data._savedBy;
+  
+  let html = `<div class="prov-card" style="margin-bottom:16px;background:rgba(255,107,43,0.08);border-color:var(--accent)">
+    <div style="font-family:'Syne',sans-serif;font-weight:800">${wasFestivo ? '🎉 Festivo' : '📊 Día normal'}</div>
+    ${savedBy ? `<div style="font-size:11px;color:var(--muted);margin-top:4px">Registrado por ${savedBy}</div>` : ''}
+  </div>`;
+  
+  html += prodItems.map(item => {
+    const qty = data[item.id];
+    const target = wasFestivo && item.qtyFestivo ? item.qtyFestivo : item.qtyNormal;
+    const hasValue = qty !== undefined && qty !== null;
+    const enough = hasValue && qty >= target;
+    
+    return `
+      <div class="stock-item" style="margin-bottom:8px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div class="stock-name">${item.name}</div>
+            <div style="font-size:11px;color:var(--muted)">Objetivo: ${target} ${item.unit}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-size:18px;font-weight:800;color:${hasValue ? (enough ? 'var(--green)' : 'var(--red)') : 'var(--muted)'}">${hasValue ? qty : '—'} ${item.unit}</div>
+            <div style="font-size:20px">${hasValue ? (enough ? '✅' : '⚠️') : ''}</div>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+  
+  el.innerHTML = html;
+}
+
+
+function filterIncStatus(status, btn) {
+  document.getElementById('inc-status-filter').value = status;
+  btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderIncidencias();
+}
 
 // ─── PANEL (Admin Dashboard) ────────────────────────────
 function renderPanel() {
@@ -3706,7 +4181,7 @@ function showTab(name) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
-  const idx = ['nuevo','pedidos','panel','usuarios','proveedores','incidencias'].indexOf(name);
+  const idx = ['nuevo','pedidos','producciones','panel','incidencias','proveedores','usuarios'].indexOf(name);
   document.querySelectorAll('.tab')[idx].classList.add('active');
   if (name === 'pedidos') renderOrders();
   if (name === 'panel') updateStats();
@@ -3714,6 +4189,7 @@ function showTab(name) {
   if (name === 'usuarios') { renderUsersList(); }
   if (name === 'proveedores') { renderProveedoresList(); }
   if (name === 'panel') { renderPanel(); }
+  if (name === 'producciones') { renderProdToday(); }
   if (name === 'incidencias') {
     renderIncidencias();
     document.getElementById('inc-month-filter').onchange = renderIncidencias;
@@ -3776,7 +4252,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '2.1.0'; // Increment this with each update
+const APP_VERSION = '2.4.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
