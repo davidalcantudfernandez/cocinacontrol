@@ -917,64 +917,187 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 function generatePDF(orderId) {
-  const order = orders.find(o => o.id === orderId);
-  if (!order) return;
-  
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  
-  // Header
-  doc.setFontSize(20);
-  doc.text('PEDIDO', 105, 20, { align: 'center' });
-  
-  doc.setFontSize(12);
-  doc.text(`Ref: ${order.ref || order.id}`, 20, 35);
-  doc.text(`Fecha: ${new Date(order.date).toLocaleDateString('es-ES')}`, 20, 42);
-  doc.text(`Restaurante: ${order.resto === 1 ? 'Ravatxol' : 'Tabalet'}`, 20, 49);
-  doc.text(`Área: ${order.area === 'cocina' ? 'Cocina' : 'Sala'}`, 20, 56);
-  doc.text(`Proveedor: ${order.provider}`, 20, 63);
-  doc.text(`Usuario: ${order.user}`, 20, 70);
-  
-  // Line
-  doc.line(20, 75, 190, 75);
-  
-  // Products
-  doc.setFontSize(14);
-  doc.text('PRODUCTOS', 20, 85);
-  
-  doc.setFontSize(11);
-  let y = 95;
-  order.items.forEach((item, idx) => {
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
+  try {
+    const order = orders.find(o => o.id === orderId);
+    if (!order) {
+      showToast('⚠️ Pedido no encontrado', '#e05252');
+      return;
     }
-    doc.text(`${idx + 1}. ${item.provName || item.name}`, 25, y);
-    doc.text(`${item.qty} ${item.unit}`, 160, y);
-    y += 7;
-  });
-  
-  // Note
-  if (order.note) {
-    y += 5;
-    if (y > 270) {
-      doc.addPage();
-      y = 20;
+    
+    if (!window.jspdf) {
+      showToast('⚠️ Librería PDF no cargada, intenta de nuevo', '#e05252');
+      return;
     }
+    
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    // === HEADER WITH BRAND ===
+    // Orange band at top
+    doc.setFillColor(255, 107, 43);
+    doc.rect(0, 0, 210, 25, 'F');
+    
+    // Title
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(22);
+    doc.text('CocinaControl', 20, 16);
+    
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Sistema de gestion de pedidos', 20, 21);
+    
+    // Reset text color
+    doc.setTextColor(40, 40, 40);
+    
+    // === ORDER INFO BOX ===
+    doc.setFillColor(245, 245, 245);
+    doc.rect(15, 35, 180, 50, 'F');
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(16);
+    doc.text('PEDIDO', 20, 45);
+    
+    doc.setFontSize(14);
+    doc.setTextColor(255, 107, 43);
+    doc.text(order.ref || ('ID-' + order.id), 20, 55);
+    
+    // Order details in two columns
+    doc.setTextColor(80, 80, 80);
+    doc.setFont('helvetica', 'normal');
     doc.setFontSize(10);
-    doc.text('NOTA:', 20, y);
-    y += 7;
-    const lines = doc.splitTextToSize(order.note, 170);
-    doc.text(lines, 20, y);
+    
+    const fecha = new Date(order.date).toLocaleDateString('es-ES', { 
+      day: '2-digit', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+    
+    // Left column
+    doc.text('Fecha:', 20, 65);
+    doc.setFont('helvetica', 'bold');
+    doc.text(fecha, 20, 71);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Restaurante:', 20, 77);
+    doc.setFont('helvetica', 'bold');
+    doc.text(order.resto === 1 ? 'Ravatxol' : 'Tabalet', 20, 83);
+    
+    // Right column
+    doc.setFont('helvetica', 'normal');
+    doc.text('Area:', 110, 65);
+    doc.setFont('helvetica', 'bold');
+    doc.text(order.area === 'cocina' ? 'Cocina' : 'Sala', 110, 71);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Usuario:', 110, 77);
+    doc.setFont('helvetica', 'bold');
+    doc.text(order.user || '-', 110, 83);
+    
+    // === PROVIDER BOX ===
+    doc.setFillColor(255, 248, 240);
+    doc.rect(15, 92, 180, 18, 'F');
+    doc.setDrawColor(255, 107, 43);
+    doc.setLineWidth(0.5);
+    doc.line(15, 92, 15, 110);
+    
+    doc.setTextColor(150, 80, 30);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.text('PROVEEDOR', 22, 99);
+    
+    doc.setTextColor(40, 40, 40);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(14);
+    doc.text(order.provider || '-', 22, 106);
+    
+    // === PRODUCTS TABLE ===
+    let y = 122;
+    
+    doc.setFillColor(255, 107, 43);
+    doc.rect(15, y - 6, 180, 9, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('#', 20, y);
+    doc.text('PRODUCTO', 30, y);
+    doc.text('CANTIDAD', 160, y);
+    
+    y += 8;
+    doc.setTextColor(40, 40, 40);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(10);
+    
+    order.items.forEach((item, idx) => {
+      if (y > 265) {
+        doc.addPage();
+        y = 25;
+      }
+      
+      // Alternating row colors
+      if (idx % 2 === 0) {
+        doc.setFillColor(250, 250, 250);
+        doc.rect(15, y - 5, 180, 8, 'F');
+      }
+      
+      doc.text(String(idx + 1), 20, y);
+      const productName = item.provName || item.name;
+      const truncated = productName.length > 60 ? productName.substring(0, 60) + '...' : productName;
+      doc.text(truncated, 30, y);
+      doc.setFont('helvetica', 'bold');
+      doc.text(item.qty + ' ' + item.unit, 160, y);
+      doc.setFont('helvetica', 'normal');
+      y += 8;
+    });
+    
+    // Total line
+    y += 4;
+    doc.setDrawColor(255, 107, 43);
+    doc.setLineWidth(0.8);
+    doc.line(15, y, 195, y);
+    y += 8;
+    
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(11);
+    doc.text('Total productos:', 20, y);
+    doc.setTextColor(255, 107, 43);
+    doc.text(String(order.items.length), 195, y, { align: 'right' });
+    doc.setTextColor(40, 40, 40);
+    
+    // === NOTE ===
+    if (order.note) {
+      y += 12;
+      if (y > 250) {
+        doc.addPage();
+        y = 25;
+      }
+      
+      doc.setFillColor(255, 248, 240);
+      doc.rect(15, y - 5, 180, 25, 'F');
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(150, 80, 30);
+      doc.text('NOTA:', 20, y);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(40, 40, 40);
+      const lines = doc.splitTextToSize(order.note, 170);
+      doc.text(lines, 20, y + 6);
+    }
+    
+    // === FOOTER ===
+    doc.setFontSize(8);
+    doc.setTextColor(150, 150, 150);
+    doc.text('CocinaControl - Generado el ' + new Date().toLocaleString('es-ES'), 105, 285, { align: 'center' });
+    doc.text('Pagina 1', 195, 285, { align: 'right' });
+    
+    // Save
+    const fileName = 'pedido_' + (order.ref || order.id) + '.pdf';
+    doc.save(fileName);
+    showToast('📄 PDF descargado');
+  } catch(e) {
+    console.error('Error generating PDF:', e);
+    showToast('⚠️ Error al generar PDF', '#e05252');
   }
-  
-  // Footer
-  doc.setFontSize(8);
-  doc.text('CocinaControl - Sistema de gestión de pedidos', 105, 285, { align: 'center' });
-  
-  // Download
-  doc.save(`pedido_${order.ref || order.id}.pdf`);
-  showToast('📄 PDF generado');
 }
 </script>
 </head>
@@ -2250,7 +2373,23 @@ function submitOrder() {
     ? `https://wa.me/${phone}?text=${encoded}`
     : `https://wa.me/?text=${encoded}`;
 
-  // Open WhatsApp FIRST before anything else can fail
+  // Generate PDF first
+  try {
+    if (typeof generatePDF === 'function') {
+      generatePDF(order.id);
+    }
+  } catch(e) { console.log('PDF error:', e); }
+  
+  // Clean up
+  try {
+    quantities = {};
+    document.getElementById('orderNote').value = '';
+    renderProducts();
+    updateBadge();
+    if (typeof updateStats === 'function') updateStats();
+  } catch(e) { console.log('Cleanup error:', e); }
+  
+  // Open WhatsApp directly
   try {
     const link = document.createElement('a');
     link.href = waUrl;
@@ -2260,25 +2399,16 @@ function submitOrder() {
     link.click();
     document.body.removeChild(link);
   } catch(e) {
-    console.error('WhatsApp open error:', e);
-    // Fallback: direct location change
     window.location.href = waUrl;
   }
-
-  // Then clean up - errors here don't matter
-  try {
-    quantities = {};
-    document.getElementById('orderNote').value = '';
-    renderProducts();
-    updateBadge();
-    if (typeof updateStats === 'function') updateStats();
-  } catch(e) { console.log('Cleanup error:', e); }
   
-  showToast('✅ Abriendo WhatsApp...');
+  showToast('✅ PDF descargado · Abriendo WhatsApp');
   setTimeout(() => {
     try { showTab('pedidos'); } catch(e) {}
   }, 1500);
 }
+
+
 
 // ─── ORDERS LIST ─────────────────────────────────────────
 function renderOrders(filter) {
@@ -2305,11 +2435,12 @@ function renderOrders(filter) {
     const statusClass = { pendiente: 'status-pending', enviado: 'status-sent', recibido: 'status-received' }[o.status];
     const restoTag = `<span class="resto-tag r${o.resto}">R${o.resto}</span>`;
     const areaTag = o.area ? `<span class="resto-tag" style="background:${o.area==='cocina'?'rgba(255,179,71,0.15)':'rgba(76,175,125,0.15)'};color:${o.area==='cocina'?'#ffb347':'#4caf7d'}">${o.area==='cocina'?'🍳':'🍷'} ${o.area}</span>` : '';
-    const pdfBtn = `<button class="action-btn" style="background:var(--blue);padding:8px 12px;font-size:12px" onclick="generatePDF(${o.id})">📄 PDF</button>`;
+    const pdfBtn = `<button class="action-btn" style="background:var(--blue);padding:8px 12px;font-size:12px" onclick="event.stopPropagation();generatePDF(${o.id})">📄 PDF</button>`;
+    const resendBtn = o.status === 'enviado' || o.status === 'pendiente' ? `<button class="action-btn" style="background:#25d366;padding:8px 12px;font-size:12px;margin-left:4px" onclick="event.stopPropagation();resendOrder(${o.id})">📲 Reenviar</button>` : '';
     const actions = o.status === 'pendiente'
-      ? `${pdfBtn}<button class="action-btn blue" onclick="updateStatus(${o.id}, 'enviado')">Marcar enviado</button>`
+      ? `${pdfBtn}${resendBtn}<button class="action-btn blue" onclick="updateStatus(${o.id}, 'enviado')">Marcar enviado</button>`
       : o.status === 'enviado'
-      ? `${pdfBtn}<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
+      ? `${pdfBtn}${resendBtn}<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
       : pdfBtn;
 
     // Build incidencia summary if exists
@@ -3662,6 +3793,49 @@ function toggleIncidenciaResolved(orderId, incIdx) {
 
 
 
+
+function resendOrder(orderId) {
+  const order = orders.find(o => o.id === orderId);
+  if (!order) return;
+  
+  // Generate PDF
+  try {
+    generatePDF(order.id);
+  } catch(e) { console.log('PDF error:', e); }
+  
+  // Build WhatsApp message
+  const restoName = order.resto === 1 ? 'Ravatxol' : 'Tabalet';
+  const areaLabel = order.area === 'cocina' ? '🍳 Cocina' : '🍷 Sala';
+  const dateStr = new Date(order.date).toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+  
+  let msg = `📦 *Pedido ${restoName} · ${areaLabel}*\n🔖 Ref: ${order.ref || order.id}\n`;
+  msg += `📅 ${dateStr}\n\n`;
+  order.items.forEach(i => { msg += `• ${i.name}: ${i.qty} ${i.unit}\n`; });
+  if (order.note) msg += `\n📝 ${order.note}`;
+  msg += `\n\n_Enviado desde CocinaControl_`;
+  
+  const encoded = encodeURIComponent(msg);
+  const phone = order.whatsapp || '';
+  const waUrl = phone
+    ? `https://wa.me/${phone}?text=${encoded}`
+    : `https://wa.me/?text=${encoded}`;
+  
+  // Open WhatsApp directly
+  try {
+    const link = document.createElement('a');
+    link.href = waUrl;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } catch(e) {
+    window.location.href = waUrl;
+  }
+  
+  showToast('✅ PDF descargado · Abriendo WhatsApp');
+}
+
 // ─── PRODUCCIONES ───────────────────────────────────────
 let prodItems = JSON.parse(localStorage.getItem('prodItems') || '[]');
 let prodMode = 'today';
@@ -4251,7 +4425,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '2.9.0'; // Increment this with each update
+const APP_VERSION = '3.2.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
