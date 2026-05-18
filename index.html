@@ -1320,6 +1320,9 @@ function generatePDF(orderId, retries) {
 
 <!-- PEDIDOS -->
 <div class="page" id="tab-pedidos">
+  <button onclick="testPDF()" style="width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:10px">
+    🧪 PROBAR PDF (test)
+  </button>
   <div class="filter-bar">
     <button class="filter-chip active" onclick="filterOrders('todos', this)">Todos</button>
     <button class="filter-chip" onclick="filterOrders('pendiente', this)">Pendientes</button>
@@ -2399,13 +2402,20 @@ function submitOrder() {
     : `https://wa.me/?text=${encoded}`;
 
   // Generate PDF - this will retry if library not ready
+  console.log('🔍 Attempting to generate PDF for order:', order.id);
+  console.log('🔍 generatePDF type:', typeof generatePDF);
+  console.log('🔍 window.jspdf:', typeof window.jspdf);
   try {
     if (typeof generatePDF === 'function') {
       generatePDF(order.id);
     } else {
-      console.log('generatePDF function not available');
+      console.error('❌ generatePDF function not available');
+      showToast('⚠️ Error: función PDF no disponible', '#e05252');
     }
-  } catch(e) { console.log('PDF error:', e); }
+  } catch(e) { 
+    console.error('❌ PDF error:', e); 
+    showToast('⚠️ Error al generar PDF: ' + e.message, '#e05252');
+  }
   
   // Clean up
   try {
@@ -3863,6 +3873,33 @@ function resendOrder(orderId) {
   showToast('✅ PDF descargado · Abriendo WhatsApp');
 }
 
+
+function testPDF() {
+  console.log('🧪 Test PDF clicked');
+  console.log('window.jspdf:', typeof window.jspdf);
+  console.log('window.jspdf.jsPDF:', window.jspdf && typeof window.jspdf.jsPDF);
+  
+  if (!window.jspdf) {
+    alert('❌ jsPDF NO está cargado. window.jspdf = ' + window.jspdf);
+    return;
+  }
+  
+  try {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text('Test PDF - CocinaControl', 20, 30);
+    doc.setFontSize(12);
+    doc.text('Si ves este PDF, la libreria funciona!', 20, 50);
+    doc.text('Fecha: ' + new Date().toLocaleString('es-ES'), 20, 60);
+    doc.save('test_cocinacontrol.pdf');
+    alert('✅ PDF generado correctamente! Mira en tu carpeta de descargas.');
+  } catch(e) {
+    alert('❌ Error: ' + e.message);
+    console.error(e);
+  }
+}
+
 // ─── PRODUCCIONES ───────────────────────────────────────
 let prodItems = JSON.parse(localStorage.getItem('prodItems') || '[]');
 let prodMode = 'today';
@@ -4452,7 +4489,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '3.3.0'; // Increment this with each update
+const APP_VERSION = '3.4.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
