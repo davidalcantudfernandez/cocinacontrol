@@ -1225,6 +1225,36 @@ function generatePDF(orderId, retries) {
 
   <div id="panelSummaryCards"></div>
   
+  <!-- ANÁLISIS DE CONSUMO -->
+  <div style="margin-top:30px">
+    <div class="section-title">📊 Análisis de consumo por producto</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px">
+      Volumen pedido para negociar precios con proveedores
+    </p>
+    
+    <div class="filter-bar" id="consumo-period-filters">
+      <button class="filter-chip" onclick="filterConsumoPeriod('week', this)">Última semana</button>
+      <button class="filter-chip" onclick="filterConsumoPeriod('month', this)">Último mes</button>
+      <button class="filter-chip active" onclick="filterConsumoPeriod('quarter', this)">Último trimestre</button>
+      <button class="filter-chip" onclick="filterConsumoPeriod('year', this)">Último año</button>
+      <button class="filter-chip" onclick="filterConsumoPeriod('all', this)">Todo</button>
+    </div>
+    
+    <div class="filter-bar" id="consumo-resto-filters" style="margin-top:-8px">
+      <button class="filter-chip active" onclick="filterConsumoResto('all', this)">Ambos locales</button>
+      <button class="filter-chip" onclick="filterConsumoResto('1', this)">🏠 Ravatxol</button>
+      <button class="filter-chip" onclick="filterConsumoResto('2', this)">🏡 Tabalet</button>
+    </div>
+    
+    <input type="search" class="stock-search" id="consumoSearch" placeholder="🔍 Buscar producto o proveedor..." oninput="renderConsumo()" />
+    
+    <div id="consumoList"></div>
+    
+    <button onclick="exportConsumoCSV()" style="width:100%;margin-top:16px;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+      📥 Exportar a CSV (para Excel)
+    </button>
+  </div>
+  
   <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--border)">
     <div class="section-title" style="color:var(--red)">⚠️ Zona peligrosa</div>
     <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">
@@ -4651,6 +4681,211 @@ function rejectRequest(reqId) {
 
 // ─── PANEL (Admin Dashboard) ────────────────────────────
 
+
+// ─── ANÁLISIS DE CONSUMO ─────────────────────────────────
+let consumoPeriod = 'quarter';
+let consumoResto = 'all';
+
+function filterConsumoPeriod(period, btn) {
+  consumoPeriod = period;
+  document.querySelectorAll('#consumo-period-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderConsumo();
+}
+
+function filterConsumoResto(resto, btn) {
+  consumoResto = resto;
+  document.querySelectorAll('#consumo-resto-filters .filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderConsumo();
+}
+
+function getConsumoData() {
+  // Filter orders by period
+  let filteredOrders = orders.filter(o => o.status !== 'pendiente' || o.items);
+  
+  const now = Date.now();
+  let cutoff = 0;
+  if (consumoPeriod === 'week') cutoff = now - 7 * 24 * 60 * 60 * 1000;
+  else if (consumoPeriod === 'month') cutoff = now - 30 * 24 * 60 * 60 * 1000;
+  else if (consumoPeriod === 'quarter') cutoff = now - 90 * 24 * 60 * 60 * 1000;
+  else if (consumoPeriod === 'year') cutoff = now - 365 * 24 * 60 * 60 * 1000;
+  
+  if (cutoff > 0) {
+    filteredOrders = filteredOrders.filter(o => new Date(o.date).getTime() > cutoff);
+  }
+  
+  // Filter by restaurant
+  if (consumoResto !== 'all') {
+    filteredOrders = filteredOrders.filter(o => o.resto === parseInt(consumoResto));
+  }
+  
+  // Aggregate products
+  const products = {};
+  filteredOrders.forEach(o => {
+    (o.items || []).forEach(item => {
+      const key = (item.provName || item.name) + '|' + (o.provider || '') + '|' + (item.unit || '');
+      if (!products[key]) {
+        products[key] = {
+          name: item.name,
+          provName: item.provName || item.name,
+          provider: o.provider || '?',
+          unit: item.unit || '',
+          totalQty: 0,
+          ordersCount: 0,
+          firstDate: o.date,
+          lastDate: o.date
+        };
+      }
+      products[key].totalQty += parseFloat(item.qty) || 0;
+      products[key].ordersCount++;
+      if (new Date(o.date) < new Date(products[key].firstDate)) products[key].firstDate = o.date;
+      if (new Date(o.date) > new Date(products[key].lastDate)) products[key].lastDate = o.date;
+    });
+  });
+  
+  // Convert to array and sort by totalQty
+  return Object.values(products).sort((a, b) => b.totalQty - a.totalQty);
+}
+
+function renderConsumo() {
+  const el = document.getElementById('consumoList');
+  if (!el) return;
+  
+  const searchEl = document.getElementById('consumoSearch');
+  const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+  
+  let data = getConsumoData();
+  
+  if (search) {
+    data = data.filter(p => 
+      p.name.toLowerCase().includes(search) ||
+      p.provName.toLowerCase().includes(search) ||
+      p.provider.toLowerCase().includes(search)
+    );
+  }
+  
+  if (data.length === 0) {
+    el.innerHTML = '<div class="empty"><div class="empty-icon">📦</div><div class="empty-text">Sin datos para este periodo</div></div>';
+    return;
+  }
+  
+  // Group by provider
+  const byProvider = {};
+  data.forEach(p => {
+    if (!byProvider[p.provider]) byProvider[p.provider] = [];
+    byProvider[p.provider].push(p);
+  });
+  
+  // Summary stats
+  const totalProducts = data.length;
+  const totalOrders = data.reduce((sum, p) => sum + p.ordersCount, 0);
+  const totalProviders = Object.keys(byProvider).length;
+  
+  let html = `
+    <div class="prov-card" style="background:linear-gradient(135deg, rgba(255,107,43,0.08), rgba(255,179,71,0.08));border-color:var(--accent);margin-bottom:14px">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;text-align:center">
+        <div>
+          <div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif">${totalProducts}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Productos</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif;color:var(--accent)">${totalProviders}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Proveedores</div>
+        </div>
+        <div>
+          <div style="font-size:22px;font-weight:800;font-family:'Syne',sans-serif">${totalOrders}</div>
+          <div style="font-size:10px;color:var(--muted);margin-top:2px">Pedidos totales</div>
+        </div>
+      </div>
+    </div>
+  `;
+  
+  // Sort providers by total quantity
+  const providersSorted = Object.keys(byProvider).sort((a, b) => {
+    const totalA = byProvider[a].reduce((sum, p) => sum + p.totalQty, 0);
+    const totalB = byProvider[b].reduce((sum, p) => sum + p.totalQty, 0);
+    return totalB - totalA;
+  });
+  
+  providersSorted.forEach(provName => {
+    const products = byProvider[provName];
+    const totalProvQty = products.reduce((sum, p) => sum + p.totalQty, 0);
+    const totalProvOrders = products.reduce((sum, p) => sum + p.ordersCount, 0);
+    
+    html += `
+      <div class="prov-stock-group" style="margin-bottom:10px">
+        <div style="background:var(--surface2);padding:14px;border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:14px">${provName}</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:2px">${products.length} producto(s) · ${totalProvOrders} pedido(s)</div>
+            </div>
+          </div>
+        </div>
+        <div style="padding:6px 0">
+          ${products.map(p => {
+            const avgPerOrder = (p.totalQty / p.ordersCount).toFixed(1);
+            return `
+              <div style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:13px;font-weight:600">${p.name}</div>
+                  ${p.provName !== p.name ? `<div style="font-size:10px;color:var(--muted);margin-top:2px">→ ${p.provName}</div>` : ''}
+                  <div style="font-size:10px;color:var(--muted);margin-top:2px">${p.ordersCount} pedido(s) · media ${avgPerOrder} ${p.unit}/pedido</div>
+                </div>
+                <div style="text-align:right">
+                  <div style="font-family:'Syne',sans-serif;font-weight:800;font-size:18px;color:var(--accent)">${p.totalQty.toFixed(1)}</div>
+                  <div style="font-size:10px;color:var(--muted)">${p.unit}</div>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  });
+  
+  el.innerHTML = html;
+}
+
+function exportConsumoCSV() {
+  let data = getConsumoData();
+  
+  if (data.length === 0) {
+    showToast('⚠️ Sin datos para exportar', '#e05252');
+    return;
+  }
+  
+  // CSV header
+  let csv = 'Producto;Descripción proveedor;Proveedor;Unidad;Cantidad total;Nº pedidos;Media por pedido;Primer pedido;Último pedido\n';
+  
+  data.forEach(p => {
+    const firstD = new Date(p.firstDate).toLocaleDateString('es-ES');
+    const lastD = new Date(p.lastDate).toLocaleDateString('es-ES');
+    const avg = (p.totalQty / p.ordersCount).toFixed(2);
+    csv += `"${p.name}";"${p.provName}";"${p.provider}";"${p.unit}";${p.totalQty.toFixed(2)};${p.ordersCount};${avg};${firstD};${lastD}\n`;
+  });
+  
+  // Download
+  const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  
+  const periodLabel = consumoPeriod === 'week' ? 'semana' : 
+                       consumoPeriod === 'month' ? 'mes' : 
+                       consumoPeriod === 'quarter' ? 'trimestre' :
+                       consumoPeriod === 'year' ? 'año' : 'todo';
+  const restoLabel = consumoResto === '1' ? '_Ravatxol' : consumoResto === '2' ? '_Tabalet' : '';
+  
+  link.download = `consumo_${periodLabel}${restoLabel}_${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  
+  showToast('📥 CSV descargado');
+}
+
 function deleteAllOrders() {
   if (!confirm('⚠️ ¿Eliminar TODOS los pedidos?\n\nEsta acción no se puede deshacer.')) return;
   if (!confirm('¿Estás seguro? Se perderán todos los pedidos, incidencias y albaranes.')) return;
@@ -4668,6 +4903,9 @@ function deleteAllOrders() {
 function renderPanel() {
   const el = document.getElementById('panelSummaryCards');
   if (!el) return;
+  
+  // Render consumo analysis too
+  setTimeout(() => { if (typeof renderConsumo === 'function') renderConsumo(); }, 100);
   
   // GENERAL STATS
   const totalOrders = orders.length;
@@ -4957,7 +5195,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.7.0'; // Increment this with each update
+const APP_VERSION = '5.8.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
