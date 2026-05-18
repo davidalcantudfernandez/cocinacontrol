@@ -1781,6 +1781,15 @@ function doLogin() {
   if (usersTabBtn) usersTabBtn.style.display = user.isAdmin ? '' : 'none';
   const provTabBtn = document.getElementById('tab-btn-proveedores');
   if (provTabBtn) provTabBtn.style.display = user.isAdmin ? '' : 'none';
+  const panelTabBtn = document.getElementById('tab-btn-panel');
+  if (panelTabBtn) panelTabBtn.style.display = user.isAdmin ? '' : 'none';
+  const incTabBtn = document.getElementById('tab-btn-incidencias');
+  if (incTabBtn) incTabBtn.style.display = user.isAdmin ? '' : 'none';
+  const prodTabBtn = document.getElementById('tab-btn-producciones');
+  if (prodTabBtn) prodTabBtn.style.display = (user.isAdmin || user.role === 'cocina') ? '' : 'none';
+
+  const restoChips = document.getElementById('resto-filter-chips');
+  if (restoChips) restoChips.style.display = user.isAdmin ? 'flex' : 'none';
 
   const albTabBtn = document.getElementById('tab-btn-albaranes');
   if (albTabBtn) albTabBtn.style.display = user.isAdmin ? '' : 'none';
@@ -4640,7 +4649,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.2.0'; // Increment this with each update
+const APP_VERSION = '5.3.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
