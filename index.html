@@ -1216,6 +1216,16 @@ function generatePDF(orderId, retries) {
   </p>
 
   <div id="panelSummaryCards"></div>
+  
+  <div style="margin-top:40px;padding-top:24px;border-top:1px solid var(--border)">
+    <div class="section-title" style="color:var(--red)">⚠️ Zona peligrosa</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.5">
+      Borrar todos los pedidos del sistema. Esta acción no se puede deshacer.
+    </p>
+    <button onclick="deleteAllOrders()" style="width:100%;padding:14px;background:var(--red);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+      🗑️ ELIMINAR TODOS LOS PEDIDOS
+    </button>
+  </div>
 </div>
 
 
@@ -4324,6 +4334,21 @@ function filterIncStatus(status, btn) {
 }
 
 // ─── PANEL (Admin Dashboard) ────────────────────────────
+
+function deleteAllOrders() {
+  if (!confirm('⚠️ ¿Eliminar TODOS los pedidos?\n\nEsta acción no se puede deshacer.')) return;
+  if (!confirm('¿Estás seguro? Se perderán todos los pedidos, incidencias y albaranes.')) return;
+  
+  orders = [];
+  saveOrders();
+  renderOrders();
+  renderPanel();
+  if (typeof updateBadge === 'function') updateBadge();
+  if (typeof updateStats === 'function') updateStats();
+  
+  showToast('🗑️ Todos los pedidos eliminados');
+}
+
 function renderPanel() {
   const el = document.getElementById('panelSummaryCards');
   if (!el) return;
@@ -4615,7 +4640,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.1.0'; // Increment this with each update
+const APP_VERSION = '5.2.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
