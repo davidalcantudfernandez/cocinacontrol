@@ -2424,10 +2424,11 @@ async function generateAndSendOrder(order, phone, msg) {
     console.error('Image upload failed:', e);
   }
   
-  // Build final message with image link if available
+  // Build final message with image URL FIRST so WhatsApp shows big preview
   let finalMsg = msg;
   if (imageUrl) {
-    finalMsg = msg + '\n\n📄 Ver pedido: ' + imageUrl;
+    // Image URL must be on its own line and at the start for WhatsApp to preview
+    finalMsg = imageUrl + '\n\n' + msg;
     order.imageUrl = imageUrl;
     saveOrders();
   }
@@ -4647,7 +4648,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '4.0.0'; // Increment this with each update
+const APP_VERSION = '4.1.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
