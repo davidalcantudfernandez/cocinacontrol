@@ -1162,6 +1162,7 @@ function generatePDF(orderId, retries) {
   <button class="tab" onclick="showTab('panel')" id="tab-btn-panel" style="display:none">📊 Panel</button>
   <button class="tab" onclick="showTab('incidencias')" id="tab-btn-incidencias" style="display:none">⚠️ Incidencias</button>
   <button class="tab" onclick="showTab('proveedores')" id="tab-btn-proveedores" style="display:none">📦 Proveedores</button>
+  <button class="tab" onclick="showTab('solicitudes')" id="tab-btn-solicitudes" style="display:none">📨 Solicitudes <span id="solicitudesBadge" style="background:var(--red);color:white;font-size:10px;padding:2px 6px;border-radius:8px;display:none;margin-left:4px">0</span></button>
   <button class="tab" onclick="showTab('usuarios')" id="tab-btn-usuarios" style="display:none">👥 Usuarios</button>
 </div>
 
@@ -1199,7 +1200,14 @@ function generatePDF(orderId, retries) {
   <div class="provider-scroll" id="providerPills"></div>
 
   <div class="section-title">Productos</div>
+  <input type="search" class="stock-search" id="productSearch" placeholder="🔍 Buscar producto..." oninput="filterProductList()" style="margin-bottom:12px" />
   <div id="productList"></div>
+  <div id="noProductFound" style="display:none;background:var(--surface2);border:1.5px dashed var(--border);border-radius:12px;padding:16px;text-align:center;margin-top:12px">
+    <div style="font-size:13px;color:var(--muted);margin-bottom:10px">No se encuentra el producto</div>
+    <button onclick="openRequestProductModal()" style="background:var(--accent);color:white;border:none;border-radius:10px;padding:10px 18px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer">
+      ➕ Solicitar nuevo producto
+    </button>
+  </div>
 
   <div class="section-title">Nota para el proveedor</div>
   <textarea class="notes-input" id="orderNote" placeholder="Ej: entregar antes de las 8h, sustituir si no hay..."></textarea>
@@ -1536,6 +1544,65 @@ function generatePDF(orderId, retries) {
   </div>
 </div>
 
+
+
+<!-- SOLICITUDES -->
+<div class="page" id="tab-solicitudes">
+  <div class="section-title">Solicitudes de nuevos productos</div>
+  <p style="font-size:13px;color:var(--muted);margin-bottom:16px">
+    Revisa las solicitudes pendientes. Al aprobar, el producto se añade al catálogo del proveedor.
+  </p>
+
+  <div class="filter-bar">
+    <button class="filter-chip active" onclick="filterSolicitudes('pending', this)">⏳ Pendientes</button>
+    <button class="filter-chip" onclick="filterSolicitudes('approved', this)">✅ Aprobadas</button>
+    <button class="filter-chip" onclick="filterSolicitudes('rejected', this)">❌ Rechazadas</button>
+  </div>
+
+  <div id="solicitudesList"></div>
+</div>
+
+<!-- MODAL SOLICITAR NUEVO PRODUCTO -->
+<div class="modal-overlay" id="requestProductModal" onclick="closeRequestProductModal(event)">
+  <div class="modal-sheet">
+    <div class="modal-title">➕ Solicitar nuevo producto</div>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.5">
+      Esta solicitud se enviará al administrador. Cuando la apruebe, el producto aparecerá en el catálogo.
+    </p>
+
+    <div class="form-row">
+      <label class="form-label">Proveedor</label>
+      <select class="form-select" id="req-provider"></select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Nombre del producto (como lo conocemos)</label>
+      <input class="form-input" id="req-name" placeholder="Ej: TOMATE CHERRY" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Nombre del proveedor (descripción exacta)</label>
+      <input class="form-input" id="req-provname" placeholder="Ej: Tomate cherry rama 250g" />
+    </div>
+    <div class="form-row">
+      <label class="form-label">Unidad</label>
+      <select class="form-select" id="req-unit">
+        <option value="kg">kg</option>
+        <option value="ud">unidad</option>
+        <option value="L">L</option>
+        <option value="caja">caja</option>
+        <option value="saco">saco</option>
+        <option value="mnj">manojo</option>
+        <option value="botella">botella</option>
+      </select>
+    </div>
+    <div class="form-row">
+      <label class="form-label">Motivo (opcional)</label>
+      <textarea class="notes-input" id="req-reason" placeholder="Ej: lo necesitamos para nuevo plato" style="height:60px"></textarea>
+    </div>
+    <button class="submit-btn" onclick="submitProductRequest()" style="margin-top:8px">📨 Enviar solicitud</button>
+    <button onclick="closeRequestProductModal()" style="width:100%;margin-top:10px;background:none;border:1px solid var(--border);border-radius:12px;padding:14px;color:var(--muted);font-family:'Syne',sans-serif;font-weight:700;cursor:pointer">Cancelar</button>
+  </div>
+</div>
+
 <!-- MODAL EDITAR USUARIO -->
 <div class="modal-overlay" id="userModal" onclick="closeUserModal(event)">
   <div class="modal-sheet">
@@ -1787,6 +1854,9 @@ function doLogin() {
   if (panelTabBtn) panelTabBtn.style.display = user.isAdmin ? '' : 'none';
   const incTabBtn = document.getElementById('tab-btn-incidencias');
   if (incTabBtn) incTabBtn.style.display = user.isAdmin ? '' : 'none';
+  const solTabBtn = document.getElementById('tab-btn-solicitudes');
+  if (solTabBtn) solTabBtn.style.display = user.isAdmin ? '' : 'none';
+  if (user.isAdmin) updateSolicitudesBadge();
   const prodTabBtn = document.getElementById('tab-btn-producciones');
   if (prodTabBtn) prodTabBtn.style.display = (user.isAdmin || user.role === 'cocina') ? '' : 'none';
 
@@ -4345,6 +4415,240 @@ function filterIncStatus(status, btn) {
   renderIncidencias();
 }
 
+
+// ─── SOLICITUDES DE PRODUCTOS ───────────────────────────
+let productRequests = JSON.parse(localStorage.getItem('productRequests') || '[]');
+let solicitudesFilter = 'pending';
+
+function saveRequests() {
+  localStorage.setItem('productRequests', JSON.stringify(productRequests));
+}
+
+function filterProductList() {
+  const searchEl = document.getElementById('productSearch');
+  const search = searchEl ? searchEl.value.toLowerCase().trim() : '';
+  
+  if (!selectedProvider) return;
+  
+  const filtered = selectedProvider.products.filter(p => {
+    if (!search) return true;
+    return p.name.toLowerCase().includes(search) ||
+           (p.provName && p.provName.toLowerCase().includes(search));
+  });
+  
+  const el = document.getElementById('productList');
+  const noFoundEl = document.getElementById('noProductFound');
+  
+  if (filtered.length === 0 && search) {
+    el.innerHTML = '';
+    if (noFoundEl) noFoundEl.style.display = 'block';
+  } else {
+    if (noFoundEl) noFoundEl.style.display = 'none';
+    el.innerHTML = filtered.map(pr => {
+      const qty = quantities[pr.id] || 0;
+      return `
+        <div class="product-item">
+          <div class="product-info">
+            <div class="product-name">${pr.name}</div>
+            <div class="product-unit" style="font-size:11px">${pr.provName ? '→ ' + pr.provName + ' · ' : ''}${pr.unit}</div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty('${pr.id}', -1)">−</button>
+            <div class="qty-num" id="qty-${pr.id}">${qty}</div>
+            <button class="qty-btn plus" onclick="changeQty('${pr.id}', 1)">+</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+}
+
+function openRequestProductModal() {
+  // Fill provider dropdown with current area providers
+  const sel = document.getElementById('req-provider');
+  let providers = PROVIDERS;
+  if (currentUser && !currentUser.isAdmin) {
+    providers = providers.filter(p => p.area === currentUser.role);
+    if (currentUser.resto) {
+      providers = providers.filter(p => p.resto === 'ambos' || p.resto === null || p.resto === currentUser.resto);
+    }
+  }
+  
+  sel.innerHTML = providers.map(p => 
+    `<option value="${p.id}" ${p.id === selectedProvider.id ? 'selected' : ''}>${p.name}</option>`
+  ).join('');
+  
+  // Pre-fill with search text
+  const searchEl = document.getElementById('productSearch');
+  if (searchEl && searchEl.value) {
+    document.getElementById('req-name').value = searchEl.value.toUpperCase();
+  } else {
+    document.getElementById('req-name').value = '';
+  }
+  document.getElementById('req-provname').value = '';
+  document.getElementById('req-reason').value = '';
+  document.getElementById('req-unit').value = 'kg';
+  
+  document.getElementById('requestProductModal').classList.add('open');
+}
+
+function closeRequestProductModal(e) {
+  if (!e || e.target === document.getElementById('requestProductModal')) {
+    document.getElementById('requestProductModal').classList.remove('open');
+  }
+}
+
+function submitProductRequest() {
+  const providerId = document.getElementById('req-provider').value;
+  const name = document.getElementById('req-name').value.trim().toUpperCase();
+  const provName = document.getElementById('req-provname').value.trim();
+  const unit = document.getElementById('req-unit').value;
+  const reason = document.getElementById('req-reason').value.trim();
+  
+  if (!name) { showToast('⚠️ Nombre obligatorio', '#e05252'); return; }
+  if (!provName) { showToast('⚠️ Descripción del proveedor obligatoria', '#e05252'); return; }
+  
+  const provider = PROVIDERS.find(p => p.id === providerId);
+  
+  const request = {
+    id: 'req_' + Date.now(),
+    providerId,
+    providerName: provider ? provider.name : '?',
+    name,
+    provName,
+    unit,
+    reason,
+    requestedBy: currentUser ? currentUser.name : 'Desconocido',
+    requestedAt: new Date().toISOString(),
+    status: 'pending',
+    area: currentUser ? currentUser.role : 'cocina',
+    resto: currentUser ? currentUser.resto : 1
+  };
+  
+  productRequests.unshift(request);
+  saveRequests();
+  updateSolicitudesBadge();
+  
+  document.getElementById('requestProductModal').classList.remove('open');
+  document.getElementById('productSearch').value = '';
+  document.getElementById('noProductFound').style.display = 'none';
+  filterProductList();
+  
+  showToast('✅ Solicitud enviada al admin');
+}
+
+function updateSolicitudesBadge() {
+  const badge = document.getElementById('solicitudesBadge');
+  if (!badge) return;
+  const pending = productRequests.filter(r => r.status === 'pending').length;
+  if (pending > 0) {
+    badge.textContent = pending;
+    badge.style.display = 'inline-block';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+function filterSolicitudes(filter, btn) {
+  solicitudesFilter = filter;
+  btn.parentElement.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderSolicitudes();
+}
+
+function renderSolicitudes() {
+  const el = document.getElementById('solicitudesList');
+  if (!el) return;
+  
+  const filtered = productRequests.filter(r => r.status === solicitudesFilter);
+  
+  if (filtered.length === 0) {
+    el.innerHTML = `<div class="empty"><div class="empty-icon">${solicitudesFilter === 'pending' ? '✅' : '📋'}</div><div class="empty-text">Sin solicitudes ${solicitudesFilter === 'pending' ? 'pendientes' : solicitudesFilter === 'approved' ? 'aprobadas' : 'rechazadas'}</div></div>`;
+    return;
+  }
+  
+  el.innerHTML = filtered.map(r => {
+    const d = new Date(r.requestedAt);
+    const dateStr = d.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+    return `
+      <div class="prov-card">
+        <div style="display:flex;justify-content:space-between;margin-bottom:10px">
+          <div style="flex:1">
+            <div class="prov-card-name">${r.name}</div>
+            <div style="font-size:12px;color:var(--accent);margin-top:2px">→ ${r.provName}</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:4px">
+              ${r.providerName} · ${r.unit} · ${r.area === 'cocina' ? '🍳' : '🍷'} ${r.resto === 1 ? 'Ravatxol' : 'Tabalet'}
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--muted);padding-top:8px;border-top:1px solid var(--border)">
+          👤 ${r.requestedBy} · ${dateStr}
+        </div>
+        ${r.reason ? `<div style="margin-top:8px;padding:8px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--text)">💬 ${r.reason}</div>` : ''}
+        
+        ${r.status === 'pending' ? `
+          <div style="display:flex;gap:8px;margin-top:12px">
+            <button onclick="approveRequest('${r.id}')" style="flex:1;padding:10px;background:var(--green);color:white;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer">✅ APROBAR</button>
+            <button onclick="rejectRequest('${r.id}')" style="flex:1;padding:10px;background:var(--red);color:white;border:none;border-radius:8px;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;cursor:pointer">❌ RECHAZAR</button>
+          </div>
+        ` : `
+          <div style="margin-top:10px;padding:6px 10px;background:${r.status === 'approved' ? 'rgba(76,175,125,0.1)' : 'rgba(224,82,82,0.1)'};color:${r.status === 'approved' ? 'var(--green)' : 'var(--red)'};border-radius:8px;font-size:11px;font-weight:700;text-align:center;font-family:'Syne',sans-serif">
+            ${r.status === 'approved' ? '✅ APROBADA' : '❌ RECHAZADA'} ${r.processedBy ? '· por ' + r.processedBy : ''}
+          </div>
+        `}
+      </div>
+    `;
+  }).join('');
+}
+
+function approveRequest(reqId) {
+  const req = productRequests.find(r => r.id === reqId);
+  if (!req) return;
+  if (!confirm(`¿Aprobar "${req.name}" y añadir al catálogo de ${req.providerName}?`)) return;
+  
+  // Add product to provider
+  const provider = PROVIDERS.find(p => p.id === req.providerId);
+  if (provider) {
+    provider.products.push({
+      id: 'prod_' + Date.now(),
+      name: req.name,
+      provName: req.provName,
+      unit: req.unit,
+      stockMin: 0,
+      stockActual: 0
+    });
+  }
+  
+  req.status = 'approved';
+  req.processedBy = currentUser ? currentUser.name : 'Admin';
+  req.processedAt = new Date().toISOString();
+  
+  saveRequests();
+  updateSolicitudesBadge();
+  renderSolicitudes();
+  
+  // Refresh product list if currently viewing
+  if (typeof renderProducts === 'function') renderProducts();
+  
+  showToast('✅ Producto aprobado y añadido al catálogo');
+}
+
+function rejectRequest(reqId) {
+  const req = productRequests.find(r => r.id === reqId);
+  if (!req) return;
+  if (!confirm(`¿Rechazar la solicitud de "${req.name}"?`)) return;
+  
+  req.status = 'rejected';
+  req.processedBy = currentUser ? currentUser.name : 'Admin';
+  req.processedAt = new Date().toISOString();
+  
+  saveRequests();
+  updateSolicitudesBadge();
+  renderSolicitudes();
+  
+  showToast('❌ Solicitud rechazada');
+}
+
 // ─── PANEL (Admin Dashboard) ────────────────────────────
 
 function deleteAllOrders() {
@@ -4588,6 +4892,7 @@ function showTab(name) {
   if (name === 'usuarios') { renderUsersList(); }
   if (name === 'proveedores') { renderProveedoresList(); }
   if (name === 'panel') { renderPanel(); }
+  if (name === 'solicitudes') { renderSolicitudes(); updateSolicitudesBadge(); }
   if (name === 'producciones') { renderProdToday(); }
   if (name === 'incidencias') {
     renderIncidencias();
@@ -4652,7 +4957,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.6.0'; // Increment this with each update
+const APP_VERSION = '5.7.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
