@@ -2393,7 +2393,7 @@ function submitOrder() {
     whatsapp: selectedProvider.whatsapp || '',
     items,
     note,
-    status: 'enviado',
+    status: 'pendiente',
     date: new Date().toISOString(),
   };
 
@@ -2444,7 +2444,7 @@ function submitOrder() {
     if (typeof updateStats === 'function') updateStats();
   } catch(e) { console.log('Cleanup error:', e); }
   
-  showToast('✅ Pedido enviado por WhatsApp');
+  showToast('✅ Pedido creado · pendiente de recepción');
   setTimeout(() => {
     try { showTab('pedidos'); } catch(e) {}
   }, 1500);
@@ -2480,7 +2480,7 @@ function renderOrders(filter) {
     const pdfBtn = `<button class="action-btn" style="background:var(--blue);padding:8px 12px;font-size:12px" onclick="event.stopPropagation();generatePDF(${o.id})">📄 PDF</button>`;
     const resendBtn = o.status === 'enviado' || o.status === 'pendiente' ? `<button class="action-btn" style="background:#25d366;padding:8px 12px;font-size:12px;margin-left:4px" onclick="event.stopPropagation();resendOrder(${o.id})">📲 Reenviar</button>` : '';
     const actions = o.status === 'pendiente'
-      ? `${pdfBtn}${resendBtn}<button class="action-btn blue" onclick="updateStatus(${o.id}, 'enviado')">Marcar enviado</button>`
+      ? `${pdfBtn}${resendBtn}<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
       : o.status === 'enviado'
       ? `${pdfBtn}${resendBtn}<button class="action-btn green" onclick="openReceptionFlow(${o.id})">📦 Recibir pedido</button>`
       : pdfBtn;
@@ -4649,7 +4649,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.3.0'; // Increment this with each update
+const APP_VERSION = '5.4.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
