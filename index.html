@@ -1167,24 +1167,28 @@ function generatePDF(orderId, retries) {
 
 <!-- NUEVO PEDIDO -->
 <div class="page active" id="tab-nuevo">
-  <div class="section-title">Restaurante</div>
-  <div class="resto-selector">
-    <div class="resto-btn selected" id="r1-btn" onclick="selectResto(1)">
-      <div class="resto-btn-name">🏠 Ravatxol</div>
-      <div class="resto-btn-sub">Local principal</div>
-    </div>
-    <div class="resto-btn" id="r2-btn" onclick="selectResto(2)">
-      <div class="resto-btn-name">🏡 Tabalet</div>
-      <div class="resto-btn-sub">Segundo local</div>
+  <div id="resto-selector-wrap">
+    <div class="section-title">Restaurante</div>
+    <div class="resto-selector">
+      <div class="resto-btn selected" id="r1-btn" onclick="selectResto(1)">
+        <div class="resto-btn-name">🏠 Ravatxol</div>
+        <div class="resto-btn-sub">Local principal</div>
+      </div>
+      <div class="resto-btn" id="r2-btn" onclick="selectResto(2)">
+        <div class="resto-btn-name">🏡 Tabalet</div>
+        <div class="resto-btn-sub">Segundo local</div>
+      </div>
     </div>
   </div>
 
+  <div id="area-selector-wrap">
   <div class="section-title">Área</div>
   <div class="resto-selector">
     <div class="resto-btn selected" id="area-cocina-btn" onclick="selectArea('cocina')">
       <div class="resto-btn-name">🍳 Cocina</div>
       <div class="resto-btn-sub">Pedidos de cocina</div>
     </div>
+</div>
     <div class="resto-btn" id="area-sala-btn" onclick="selectArea('sala')">
       <div class="resto-btn-name">🍷 Sala</div>
       <div class="resto-btn-sub">Pedidos de sala</div>
@@ -1321,9 +1325,6 @@ function generatePDF(orderId, retries) {
 
 <!-- PEDIDOS -->
 <div class="page" id="tab-pedidos">
-  <button onclick="testPDF()" style="width:100%;padding:12px;background:var(--blue);color:white;border:none;border-radius:10px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer;margin-bottom:10px">
-    🧪 PROBAR PDF (test)
-  </button>
   <div class="filter-bar">
     <button class="filter-chip active" onclick="filterOrders('todos', this)">Todos</button>
     <button class="filter-chip" onclick="filterOrders('pendiente', this)">Pendientes</button>
@@ -2402,43 +2403,7 @@ function submitOrder() {
     ? `https://wa.me/${phone}?text=${encoded}`
     : `https://wa.me/?text=${encoded}`;
 
-  // Clean up first
-  try {
-    quantities = {};
-    document.getElementById('orderNote').value = '';
-    renderProducts();
-    updateBadge();
-    if (typeof updateStats === 'function') updateStats();
-  } catch(e) { console.log('Cleanup error:', e); }
-  
-  // Generate image and upload to Supabase, then open WhatsApp with image link
-  generateAndSendOrder(order, phone, msg);
-}
-
-async function generateAndSendOrder(order, phone, msg) {
-  let imageUrl = null;
-  
-  try {
-    imageUrl = await uploadOrderImage(order);
-  } catch(e) {
-    console.error('Image upload failed:', e);
-  }
-  
-  // Build final message with image URL FIRST so WhatsApp shows big preview
-  let finalMsg = msg;
-  if (imageUrl) {
-    // Image URL must be on its own line and at the start for WhatsApp to preview
-    finalMsg = imageUrl + '\n\n' + msg;
-    order.imageUrl = imageUrl;
-    saveOrders();
-  }
-  
-  const encoded = encodeURIComponent(finalMsg);
-  const waUrl = phone
-    ? `https://wa.me/${phone}?text=${encoded}`
-    : `https://wa.me/?text=${encoded}`;
-  
-  // Open WhatsApp
+  // Open WhatsApp immediately with text message
   try {
     const link = document.createElement('a');
     link.href = waUrl;
@@ -2451,14 +2416,16 @@ async function generateAndSendOrder(order, phone, msg) {
     window.location.href = waUrl;
   }
   
-  // Also generate PDF for download as backup
+  // Clean up
   try {
-    if (typeof generatePDF === 'function') {
-      generatePDF(order.id);
-    }
-  } catch(e) { console.log('PDF backup error:', e); }
+    quantities = {};
+    document.getElementById('orderNote').value = '';
+    renderProducts();
+    updateBadge();
+    if (typeof updateStats === 'function') updateStats();
+  } catch(e) { console.log('Cleanup error:', e); }
   
-  showToast(imageUrl ? '✅ Pedido con imagen enviado' : '✅ Pedido enviado (sin imagen)');
+  showToast('✅ Pedido enviado por WhatsApp');
   setTimeout(() => {
     try { showTab('pedidos'); } catch(e) {}
   }, 1500);
@@ -4648,7 +4615,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '4.1.0'; // Increment this with each update
+const APP_VERSION = '5.1.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
