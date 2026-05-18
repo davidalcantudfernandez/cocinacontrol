@@ -1337,12 +1337,14 @@ function generatePDF(orderId, retries) {
 <div class="page" id="tab-pedidos">
   <div class="filter-bar">
     <button class="filter-chip active" onclick="filterOrders('todos', this)">Todos</button>
-    <button class="filter-chip" onclick="filterOrders('pendiente', this)">Pendientes</button>
-    <button class="filter-chip" onclick="filterOrders('enviado', this)">Enviados</button>
-    <button class="filter-chip" onclick="filterOrders('recibido', this)">Recibidos</button>
-    <button class="filter-chip" onclick="filterOrders('r1', this)">Ravatxol</button>
-    <button class="filter-chip" onclick="filterOrders('r2', this)">Tabalet</button>
+    <button class="filter-chip" onclick="filterOrders('pendiente', this)">⏳ Pendientes</button>
+    <button class="filter-chip" onclick="filterOrders('recibido', this)">✅ Recibidos</button>
     <button class="filter-chip" onclick="filterOrders('incidencia', this)">⚠️ Incidencias</button>
+  </div>
+  <div class="filter-bar" id="resto-filter-chips" style="margin-top:-8px;display:none">
+    <button class="filter-chip active" onclick="filterOrders('all-resto', this)">Todos locales</button>
+    <button class="filter-chip" onclick="filterOrders('r1', this)">🏠 Ravatxol</button>
+    <button class="filter-chip" onclick="filterOrders('r2', this)">🏡 Tabalet</button>
   </div>
   <div id="ordersList"></div>
 </div>
@@ -1788,8 +1790,8 @@ function doLogin() {
   const prodTabBtn = document.getElementById('tab-btn-producciones');
   if (prodTabBtn) prodTabBtn.style.display = (user.isAdmin || user.role === 'cocina') ? '' : 'none';
 
-  const restoChips = document.getElementById('resto-filter-chips');
-  if (restoChips) restoChips.style.display = user.isAdmin ? 'flex' : 'none';
+  const restoChipsEl = document.getElementById('resto-filter-chips');
+  if (restoChipsEl) restoChipsEl.style.display = user.isAdmin ? 'flex' : 'none';
 
   const albTabBtn = document.getElementById('tab-btn-albaranes');
   if (albTabBtn) albTabBtn.style.display = user.isAdmin ? '' : 'none';
@@ -2456,9 +2458,10 @@ function submitOrder() {
 function renderOrders(filter) {
   filter = filter || currentFilter;
   const el = document.getElementById('ordersList');
+  if (!el) return;
   let filtered = [...orders];
 
-  if (filter === 'pendiente') filtered = filtered.filter(o => o.status === 'pendiente');
+  if (filter === 'pendiente') filtered = filtered.filter(o => o.status === 'pendiente' || o.status === 'enviado');
   else if (filter === 'enviado') filtered = filtered.filter(o => o.status === 'enviado');
   else if (filter === 'recibido') filtered = filtered.filter(o => o.status === 'recibido');
   else if (filter === 'r1') filtered = filtered.filter(o => o.resto === 1);
@@ -4649,7 +4652,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.4.0'; // Increment this with each update
+const APP_VERSION = '5.6.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
