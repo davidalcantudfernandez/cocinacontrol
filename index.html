@@ -1129,7 +1129,18 @@ function generatePDF(orderId, retries) {
 </head>
 <body>
 
-<div class="login-screen" id="loginScreen">
+<!-- LOADING SCREEN -->
+<div id="loadingScreen" style="position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+  <div style="font-family:'Syne',sans-serif;font-weight:900;font-size:28px;color:var(--accent)">🔍 CocinaControl</div>
+  <div style="font-size:13px;color:var(--muted)" id="loadingMsg">Conectando...</div>
+  <div style="width:40px;height:40px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+</div>
+
+<style>
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="login-screen" id="loginScreen" style="display:none">
   <div class="login-logo">🍳 <span>Cocina</span>Control</div>
   <div class="login-sub">Ravatxol · Tabalet</div>
   <div class="login-card">
@@ -1420,33 +1431,16 @@ function generatePDF(orderId, retries) {
 
 <!-- USUARIOS -->
 <div class="page" id="tab-usuarios">
-  <div class="section-title">Crear nuevo usuario</div>
-  <div class="new-user-form">
-    <div class="form-row">
-      <label class="form-label">Nombre</label>
-      <input class="form-input" id="new-user-name" placeholder="Nombre del usuario" />
-    </div>
-    <div class="form-row">
-      <label class="form-label">Contraseña</label>
-      <input class="form-input" id="new-user-pass" placeholder="Contraseña" />
-    </div>
-    <div class="form-row">
-      <label class="form-label">Rol</label>
-      <select class="form-select" id="new-user-role">
-        <option value="cocina">🍳 Cocina</option>
-        <option value="sala">🍷 Sala</option>
-        <option value="admin">👑 Admin</option>
-      </select>
-    </div>
-    <div class="form-row">
-      <label class="form-label">Restaurante</label>
-      <select class="form-select" id="new-user-resto">
-        <option value="1">🏠 Ravatxol</option>
-        <option value="2">🏡 Tabalet</option>
-        <option value="0">Ambos (Admin)</option>
-      </select>
-    </div>
-    <button class="submit-btn" onclick="createUser()" style="margin-top:4px">➕ Crear usuario</button>
+  <div class="section-title" style="margin-bottom:12px">Gestión de usuarios</div>
+  
+  <div style="display:flex;gap:8px;margin-bottom:20px">
+    <button class="submit-btn" style="flex:1;background:var(--green)" onclick="openNewUserModal()">
+      ➕ Nuevo usuario
+    </button>
+    <button onclick="forceSyncUsers()" style="flex:1;padding:14px;background:var(--blue);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer">
+      ☁️ Guardar en nube
+    </button>
+  </div>
   </div>
 
   <div class="section-title">Usuarios actuales</div>
@@ -1671,9 +1665,15 @@ function generatePDF(orderId, retries) {
 <div class="page" id="tab-proveedores">
   <div class="section-title" style="margin-bottom:12px">Gestión de proveedores</div>
 
-  <button class="submit-btn" style="margin-bottom:20px;background:var(--green)" onclick="openNewProvModal()">
-    ➕ Nuevo proveedor
-  </button>
+  <div style="display:flex;gap:8px;margin-bottom:20px">
+    <button class="submit-btn" style="flex:1;background:var(--green)" onclick="openNewProvModal()">
+      ➕ Nuevo proveedor
+    </button>
+    <button onclick="forceSyncProviders()" style="flex:1;padding:14px;background:var(--blue);color:white;border:none;border-radius:12px;font-family:'Syne',sans-serif;font-weight:700;font-size:13px;cursor:pointer" id="syncProvidersBtn">
+      ☁️ Guardar en nube
+    </button>
+  </div>
+  <div id="syncStatus" style="display:none;padding:10px;border-radius:10px;font-size:12px;text-align:center;margin-bottom:12px;font-family:'Syne',sans-serif;font-weight:700"></div>
 
   <div id="proveedoresList"></div>
 </div>
@@ -5307,17 +5307,28 @@ function loadSupabase() {
       );
       console.log('Supabase conectado');
       
-      // Sync users and providers from cloud
+      const setMsg = (txt) => {
+        const el = document.getElementById('loadingMsg');
+        if (el) el.textContent = txt;
+      };
+      
+      setMsg('Cargando usuarios...');
       await syncUsersFromCloud();
+      
+      setMsg('Cargando proveedores...');
       await syncProvidersFromCloud();
       
-      // Re-render providers if on nuevo pedido tab
       if (typeof renderProviders === 'function') renderProviders();
       if (typeof renderProducts === 'function') renderProducts();
       
     } catch(e) { console.log('Supabase error:', e); }
+    
+    hideLoadingScreen();
   };
-  script.onerror = () => console.log('Supabase no disponible');
+  script.onerror = () => {
+    console.log('Supabase no disponible');
+    hideLoadingScreen();
+  };
   document.head.appendChild(script);
 }
 
@@ -5347,13 +5358,24 @@ async function saveInventarioToCloud(registros) {
   } catch(e) { console.log('Inventario save error:', e); return false; }
 }
 
+
+function hideLoadingScreen() {
+  const loading = document.getElementById('loadingScreen');
+  if (loading) loading.style.display = 'none';
+  const loginEl = document.getElementById('loginScreen');
+  if (loginEl) loginEl.style.display = '';
+}
+
+// Fallback: if Supabase takes too long, show login anyway after 5 seconds
+setTimeout(hideLoadingScreen, 5000);
+
 // Load Supabase after app is ready
 window.addEventListener('load', loadSupabase);
 </script>
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '6.2.0'; // Increment this with each update
+const APP_VERSION = '6.6.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
