@@ -1924,6 +1924,8 @@ function doLogin() {
   currentUser = user;
   document.getElementById('loginScreen').classList.add('hidden');
   document.getElementById('userChip').style.display = 'flex';
+  const syncBtn = document.getElementById('syncBtn');
+  if (syncBtn) syncBtn.style.display = 'block';
   const usersTabBtn = document.getElementById('tab-btn-usuarios');
   if (usersTabBtn) usersTabBtn.style.display = user.isAdmin ? '' : 'none';
   const provTabBtn = document.getElementById('tab-btn-proveedores');
@@ -4986,6 +4988,30 @@ function exportConsumoCSV() {
 }
 
 
+async function syncAllFromCloud() {
+  const btn = document.getElementById('syncBtn');
+  if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
+  
+  showToast('🔄 Actualizando datos...', '#5b9cf6');
+  
+  try {
+    await syncUsersFromCloud();
+    await syncProvidersFromCloud();
+    
+    // Re-render everything
+    if (typeof renderProviders === 'function') renderProviders();
+    if (typeof renderProducts === 'function') renderProducts();
+    if (typeof renderProveedoresList === 'function') renderProveedoresList();
+    if (typeof renderUsersList === 'function') renderUsersList();
+    
+    showToast('✅ Datos actualizados');
+  } catch(e) {
+    showToast('❌ Error al actualizar', '#e05252');
+  }
+  
+  if (btn) { btn.textContent = '🔄'; btn.disabled = false; }
+}
+
 async function forceSyncProviders() {
   const btn = document.getElementById('syncProvidersBtn');
   const status = document.getElementById('syncStatus');
@@ -5375,7 +5401,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '6.6.0'; // Increment this with each update
+const APP_VERSION = '6.7.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
