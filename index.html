@@ -1892,21 +1892,18 @@ async function loadUsersFromCloud() {
 }
 
 async function syncUsersFromCloud() {
+  console.log('🔄 Fetching users from cloud...');
   const cloudUsers = await loadUsersFromCloud();
-  if (!cloudUsers || cloudUsers.length === 0) return;
+  if (!cloudUsers || cloudUsers.length === 0) {
+    console.log('ℹ️ No users in cloud');
+    return false;
+  }
   
-  // Merge cloud users with defaults
-  const merged = DEFAULT_USERS.map(def => {
-    const found = cloudUsers.find(s => s.id === def.id);
-    return found ? {...found, isAdmin: def.isAdmin} : {...def};
-  });
-  cloudUsers.forEach(s => {
-    if (!DEFAULT_USERS.find(d => d.id === s.id)) merged.push(s);
-  });
-  
-  USERS = merged;
+  // Use cloud users directly (cloud is source of truth)
+  USERS = cloudUsers;
   localStorage.setItem('appUsers', JSON.stringify(USERS));
-  console.log('Users synced from cloud: ' + USERS.length);
+  console.log('✅ Users synced from cloud: ' + USERS.length);
+  return true;
 }
 
 let USERS = loadUsers();
@@ -3113,22 +3110,44 @@ async function saveProvidersToCloud(providers) {
 }
 
 async function syncProvidersFromCloud() {
-  if (!supabaseClient) return;
+  if (!supabaseClient) {
+    console.log('⚠️ Supabase not connected yet');
+    return false;
+  }
   try {
+    console.log('🔄 Fetching providers from cloud...');
     const { data, error } = await supabaseClient
       .from('app_config')
-      .select('value')
+      .select('value, updated_at')
       .eq('key', 'providers')
-      .single();
-    if (error || !data) return;
+      .maybeSingle();
+    
+    if (error) {
+      console.error('❌ Cloud fetch error:', error);
+      return false;
+    }
+    if (!data) {
+      console.log('ℹ️ No providers in cloud yet');
+      return false;
+    }
+    
     const cloudProviders = JSON.parse(data.value);
-    if (!cloudProviders || cloudProviders.length === 0) return;
+    if (!cloudProviders || cloudProviders.length === 0) {
+      console.log('ℹ️ Cloud providers empty');
+      return false;
+    }
+    
+    // ALWAYS overwrite local with cloud
     appProviders = cloudProviders;
     PROVIDERS.length = 0;
     appProviders.forEach(p => PROVIDERS.push(p));
     localStorage.setItem('appProvidersCustom', JSON.stringify(appProviders));
-    console.log('Providers synced from cloud');
-  } catch(e) { console.log('Error syncing providers:', e); }
+    console.log('✅ Providers synced from cloud: ' + appProviders.length + ' (updated: ' + data.updated_at + ')');
+    return true;
+  } catch(e) { 
+    console.error('❌ Error syncing providers:', e); 
+    return false;
+  }
 }
 
 function renderProveedoresList() {
@@ -4992,11 +5011,17 @@ async function syncAllFromCloud() {
   const btn = document.getElementById('syncBtn');
   if (btn) { btn.textContent = '⏳'; btn.disabled = true; }
   
+  if (!supabaseClient) {
+    showToast('⚠️ Conectando a la nube...', '#e05252');
+    if (btn) { btn.textContent = '🔄'; btn.disabled = false; }
+    return;
+  }
+  
   showToast('🔄 Actualizando datos...', '#5b9cf6');
   
   try {
-    await syncUsersFromCloud();
-    await syncProvidersFromCloud();
+    const usersOk = await syncUsersFromCloud();
+    const provOk = await syncProvidersFromCloud();
     
     // Re-render everything
     if (typeof renderProviders === 'function') renderProviders();
@@ -5004,8 +5029,13 @@ async function syncAllFromCloud() {
     if (typeof renderProveedoresList === 'function') renderProveedoresList();
     if (typeof renderUsersList === 'function') renderUsersList();
     
-    showToast('✅ Datos actualizados');
+    if (usersOk || provOk) {
+      showToast('✅ Datos actualizados desde la nube');
+    } else {
+      showToast('ℹ️ No hay datos nuevos en la nube');
+    }
   } catch(e) {
+    console.error('Sync all error:', e);
     showToast('❌ Error al actualizar', '#e05252');
   }
   
@@ -5401,7 +5431,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '6.7.0'; // Increment this with each update
+const APP_VERSION = '6.8.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
