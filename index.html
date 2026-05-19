@@ -2370,8 +2370,6 @@ let currentFilter = 'todos';
 
 // ─── INIT ────────────────────────────────────────────────
 function init() {
-  // Clear any cached providers from old versions
-  localStorage.removeItem('appProviders');
   loadStock();
   renderProviders();
   renderProducts();
@@ -3021,6 +3019,23 @@ async function cerrarInventarioMensual() {
 let appProviders = [];
 // Sync PROVIDERS to appProviders on load
 function syncProviders() {
+  // Check if there are saved custom providers
+  try {
+    const saved = localStorage.getItem('appProvidersCustom');
+    if (saved) {
+      const savedProviders = JSON.parse(saved);
+      if (savedProviders && savedProviders.length > 0) {
+        appProviders = savedProviders;
+        // Also update PROVIDERS array
+        PROVIDERS.length = 0;
+        appProviders.forEach(p => PROVIDERS.push(p));
+        console.log('Loaded ' + appProviders.length + ' providers from storage');
+        return;
+      }
+    }
+  } catch(e) { console.log('Error loading saved providers:', e); }
+  
+  // Fallback to code defaults
   appProviders = PROVIDERS.map(p => ({...p}));
 }
 syncProviders();
@@ -3028,6 +3043,10 @@ syncProviders();
 function saveProviders() {
   PROVIDERS.length = 0;
   appProviders.forEach(p => PROVIDERS.push(p));
+  // Save changes to localStorage so they persist
+  try {
+    localStorage.setItem('appProvidersCustom', JSON.stringify(appProviders));
+  } catch(e) { console.log('Error saving providers:', e); }
 }
 
 function renderProveedoresList() {
@@ -5195,7 +5214,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.8.0'; // Increment this with each update
+const APP_VERSION = '5.9.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
