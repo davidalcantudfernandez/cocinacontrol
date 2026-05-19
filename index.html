@@ -1847,20 +1847,68 @@ function loadUsers() {
   const saved = localStorage.getItem('appUsers');
   if (!saved) return DEFAULT_USERS.map(u => ({...u}));
   const savedUsers = JSON.parse(saved);
-  // Merge: always keep DEFAULT_USERS admins fresh, append extra users
   const merged = DEFAULT_USERS.map(def => {
     const found = savedUsers.find(s => s.id === def.id);
     return found ? {...found, isAdmin: def.isAdmin} : {...def};
   });
-  // Add any custom users created by admins
   savedUsers.forEach(s => {
     if (!DEFAULT_USERS.find(d => d.id === s.id)) merged.push(s);
   });
   return merged;
 }
+
 function saveUsers(users) {
   localStorage.setItem('appUsers', JSON.stringify(users));
+  // Also save to Supabase for cross-device sync
+  saveUsersToCloud(users);
 }
+
+async function saveUsersToCloud(users) {
+  if (!supabaseClient) return;
+  try {
+    // Save as a single JSON record in a config table
+    await supabaseClient.from('app_config').upsert([{
+      key: 'users',
+      value: JSON.stringify(users),
+      updated_at: new Date().toISOString()
+    }], { onConflict: 'key' });
+  } catch(e) { console.log('Error saving users to cloud:', e); }
+}
+
+async function loadUsersFromCloud() {
+  if (!supabaseClient) return null;
+  try {
+    const { data, error } = await supabaseClient
+      .from('app_config')
+      .select('value')
+      .eq('key', 'users')
+      .single();
+    if (error || !data) return null;
+    return JSON.parse(data.value);
+  } catch(e) { 
+    console.log('Error loading users from cloud:', e);
+    return null;
+  }
+}
+
+async function syncUsersFromCloud() {
+  const cloudUsers = await loadUsersFromCloud();
+  if (!cloudUsers || cloudUsers.length === 0) return;
+  
+  // Merge cloud users with defaults
+  const merged = DEFAULT_USERS.map(def => {
+    const found = cloudUsers.find(s => s.id === def.id);
+    return found ? {...found, isAdmin: def.isAdmin} : {...def};
+  });
+  cloudUsers.forEach(s => {
+    if (!DEFAULT_USERS.find(d => d.id === s.id)) merged.push(s);
+  });
+  
+  USERS = merged;
+  localStorage.setItem('appUsers', JSON.stringify(USERS));
+  console.log('Users synced from cloud: ' + USERS.length);
+}
+
 let USERS = loadUsers();
 
 let currentUser = null;
@@ -3043,10 +3091,42 @@ syncProviders();
 function saveProviders() {
   PROVIDERS.length = 0;
   appProviders.forEach(p => PROVIDERS.push(p));
-  // Save changes to localStorage so they persist
+  // Save to localStorage
   try {
     localStorage.setItem('appProvidersCustom', JSON.stringify(appProviders));
   } catch(e) { console.log('Error saving providers:', e); }
+  // Save to Supabase for cross-device sync
+  saveProvidersToCloud(appProviders);
+}
+
+async function saveProvidersToCloud(providers) {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.from('app_config').upsert([{
+      key: 'providers',
+      value: JSON.stringify(providers),
+      updated_at: new Date().toISOString()
+    }], { onConflict: 'key' });
+  } catch(e) { console.log('Error saving providers to cloud:', e); }
+}
+
+async function syncProvidersFromCloud() {
+  if (!supabaseClient) return;
+  try {
+    const { data, error } = await supabaseClient
+      .from('app_config')
+      .select('value')
+      .eq('key', 'providers')
+      .single();
+    if (error || !data) return;
+    const cloudProviders = JSON.parse(data.value);
+    if (!cloudProviders || cloudProviders.length === 0) return;
+    appProviders = cloudProviders;
+    PROVIDERS.length = 0;
+    appProviders.forEach(p => PROVIDERS.push(p));
+    localStorage.setItem('appProvidersCustom', JSON.stringify(appProviders));
+    console.log('Providers synced from cloud');
+  } catch(e) { console.log('Error syncing providers:', e); }
 }
 
 function renderProveedoresList() {
@@ -4905,6 +4985,56 @@ function exportConsumoCSV() {
   showToast('📥 CSV descargado');
 }
 
+
+async function forceSyncProviders() {
+  const btn = document.getElementById('syncProvidersBtn');
+  const status = document.getElementById('syncStatus');
+  
+  if (btn) { btn.textContent = '⏳ Guardando...'; btn.disabled = true; }
+  if (status) { status.style.display = 'block'; status.style.background = 'rgba(91,156,246,0.15)'; status.style.color = 'var(--blue)'; status.textContent = '☁️ Sincronizando con la nube...'; }
+  
+  if (!supabaseClient) {
+    if (status) { status.style.background = 'rgba(224,82,82,0.15)'; status.style.color = 'var(--red)'; status.textContent = '❌ Sin conexión a Supabase'; }
+    if (btn) { btn.textContent = '☁️ Guardar en nube'; btn.disabled = false; }
+    return;
+  }
+  
+  try {
+    await supabaseClient.from('app_config').upsert([{
+      key: 'providers',
+      value: JSON.stringify(appProviders),
+      updated_at: new Date().toISOString()
+    }], { onConflict: 'key' });
+    
+    if (status) { 
+      status.style.background = 'rgba(76,175,125,0.15)'; 
+      status.style.color = 'var(--green)'; 
+      status.textContent = '✅ Guardado en la nube · disponible en todos los dispositivos';
+      setTimeout(() => { if (status) status.style.display = 'none'; }, 4000);
+    }
+    if (btn) { btn.textContent = '☁️ Guardar en nube'; btn.disabled = false; }
+    showToast('✅ Proveedores guardados en la nube');
+  } catch(e) {
+    console.error('Sync error:', e);
+    if (status) { status.style.background = 'rgba(224,82,82,0.15)'; status.style.color = 'var(--red)'; status.textContent = '❌ Error al guardar: ' + e.message; }
+    if (btn) { btn.textContent = '☁️ Guardar en nube'; btn.disabled = false; }
+  }
+}
+
+async function forceSyncUsers() {
+  if (!supabaseClient) return;
+  try {
+    await supabaseClient.from('app_config').upsert([{
+      key: 'users',
+      value: JSON.stringify(USERS),
+      updated_at: new Date().toISOString()
+    }], { onConflict: 'key' });
+    showToast('✅ Usuarios guardados en la nube');
+  } catch(e) {
+    showToast('❌ Error al guardar usuarios', '#e05252');
+  }
+}
+
 function deleteAllOrders() {
   if (!confirm('⚠️ ¿Eliminar TODOS los pedidos?\n\nEsta acción no se puede deshacer.')) return;
   if (!confirm('¿Estás seguro? Se perderán todos los pedidos, incidencias y albaranes.')) return;
@@ -5169,13 +5299,22 @@ let supabaseClient = null;
 function loadSupabase() {
   const script = document.createElement('script');
   script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-  script.onload = () => {
+  script.onload = async () => {
     try {
       supabaseClient = supabase.createClient(
         'https://kbmnrbgxuabcryfxklci.supabase.co',
         'sb_publishable_ogUQf-TYoezu-SaSmVlW4A_Z6c8rG7J'
       );
       console.log('Supabase conectado');
+      
+      // Sync users and providers from cloud
+      await syncUsersFromCloud();
+      await syncProvidersFromCloud();
+      
+      // Re-render providers if on nuevo pedido tab
+      if (typeof renderProviders === 'function') renderProviders();
+      if (typeof renderProducts === 'function') renderProducts();
+      
     } catch(e) { console.log('Supabase error:', e); }
   };
   script.onerror = () => console.log('Supabase no disponible');
@@ -5214,19 +5353,25 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '5.9.0'; // Increment this with each update
+const APP_VERSION = '6.2.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
   const stored = localStorage.getItem(STORAGE_VERSION_KEY);
   if (stored !== APP_VERSION) {
-    console.log('New version detected:', APP_VERSION);
+    console.log('New version detected:', APP_VERSION, 'was:', stored);
     localStorage.setItem(STORAGE_VERSION_KEY, APP_VERSION);
     if (stored) {
-      // Not first load, force reload to get new version
-      setTimeout(() => {
-        window.location.reload(true);
-      }, 500);
+      // Force hard reload bypassing ALL cache
+      if ('caches' in window) {
+        caches.keys().then(names => {
+          names.forEach(name => caches.delete(name));
+        }).then(() => {
+          window.location.href = window.location.href.split('?')[0] + '?v=' + APP_VERSION;
+        });
+      } else {
+        window.location.href = window.location.href.split('?')[0] + '?v=' + APP_VERSION;
+      }
     }
   }
 }
