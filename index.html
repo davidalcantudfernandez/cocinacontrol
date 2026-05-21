@@ -3245,6 +3245,12 @@ function saveProvider() {
   saveProviders();
   renderProveedoresList();
   renderProviders();
+  
+  // Auto-sync to cloud
+  if (typeof saveProvidersToCloud === 'function' && supabaseClient) {
+    saveProvidersToCloud(appProviders);
+  }
+  
   document.getElementById('provModal').classList.remove('open');
   showToast('✅ Proveedor guardado');
 }
@@ -3342,9 +3348,22 @@ function saveProduct() {
   }
 
   saveProviders();
+  
+  // Update selectedProvider reference if it was modified
+  if (selectedProvider) {
+    const updated = PROVIDERS.find(p => p.id === selectedProvider.id);
+    if (updated) selectedProvider = updated;
+  }
+  
   renderProveedoresList();
   renderProviders();
   renderProducts();
+  
+  // Auto-sync to cloud
+  if (typeof forceSyncProviders === 'function' && supabaseClient) {
+    saveProvidersToCloud(appProviders);
+  }
+  
   document.getElementById('productModal').classList.remove('open');
 }
 
@@ -3353,9 +3372,22 @@ function deleteProduct(provId, prodId) {
   const prov = appProviders.find(p => p.id === provId);
   if (prov) prov.products = prov.products.filter(p => p.id !== prodId);
   saveProviders();
+  
+  // Update selectedProvider reference
+  if (selectedProvider) {
+    const updated = PROVIDERS.find(p => p.id === selectedProvider.id);
+    if (updated) selectedProvider = updated;
+  }
+  
   renderProveedoresList();
   renderProviders();
   renderProducts();
+  
+  // Auto-sync to cloud
+  if (typeof saveProvidersToCloud === 'function' && supabaseClient) {
+    saveProvidersToCloud(appProviders);
+  }
+  
   showToast('🗑️ Producto eliminado');
 }
 
@@ -5431,7 +5463,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '6.9.0'; // Increment this with each update
+const APP_VERSION = '7.0.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
