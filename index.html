@@ -910,6 +910,55 @@
     width: 24px; height: 24px; border-radius: 50%;
     font-size: 14px; cursor: pointer;
   }
+
+  /* PROVIDER PRIORITY & PAUSE */
+  .prov-card.paused { opacity: 0.5; }
+  .prov-card.paused .prov-card-name::after {
+    content: ' ⏸️ PAUSADO';
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pause-toggle {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .pause-toggle.paused {
+    background: rgba(224,82,82,0.15);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .priority-badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .priority-badge.principal {
+    background: rgba(255,107,43,0.15);
+    color: var(--accent);
+  }
+  .priority-badge.alternativo {
+    background: rgba(91,156,246,0.15);
+    color: var(--blue);
+  }
+  .product-item.paused {
+    opacity: 0.5;
+  }
+  .product-item.paused .product-name::after {
+    content: ' ⏸️';
+    color: var(--red);
+  }
 </style>
 
 
@@ -1138,6 +1187,55 @@ function generatePDF(orderId, retries) {
 
 <style>
 @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* PROVIDER PRIORITY & PAUSE */
+  .prov-card.paused { opacity: 0.5; }
+  .prov-card.paused .prov-card-name::after {
+    content: ' ⏸️ PAUSADO';
+    color: var(--red);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .pause-toggle {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    font-size: 10px;
+    cursor: pointer;
+    color: var(--muted);
+  }
+  .pause-toggle.paused {
+    background: rgba(224,82,82,0.15);
+    border-color: var(--red);
+    color: var(--red);
+  }
+  .priority-badge {
+    display: inline-block;
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 8px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    margin-left: 4px;
+  }
+  .priority-badge.principal {
+    background: rgba(255,107,43,0.15);
+    color: var(--accent);
+  }
+  .priority-badge.alternativo {
+    background: rgba(91,156,246,0.15);
+    color: var(--blue);
+  }
+  .product-item.paused {
+    opacity: 0.5;
+  }
+  .product-item.paused .product-name::after {
+    content: ' ⏸️';
+    color: var(--red);
+  }
 </style>
 
 <div class="login-screen" id="loginScreen" style="display:none">
@@ -1207,11 +1305,13 @@ function generatePDF(orderId, retries) {
     </div>
   </div>
 
+  <div class="section-title">🔍 Buscar producto</div>
+  <input type="search" class="stock-search" id="productSearch" placeholder="Escribe el nombre del producto..." oninput="filterProductList()" style="margin-bottom:16px" />
+
   <div class="section-title">Proveedor</div>
   <div class="provider-scroll" id="providerPills"></div>
 
   <div class="section-title">Productos</div>
-  <input type="search" class="stock-search" id="productSearch" placeholder="🔍 Buscar producto..." oninput="filterProductList()" style="margin-bottom:12px" />
   <div id="productList"></div>
   <div id="noProductFound" style="display:none;background:var(--surface2);border:1.5px dashed var(--border);border-radius:12px;padding:16px;text-align:center;margin-top:12px">
     <div style="font-size:13px;color:var(--muted);margin-bottom:10px">No se encuentra el producto</div>
@@ -2453,6 +2553,7 @@ function selectArea(area) {
 function renderProviders() {
   const el = document.getElementById('providerPills');
   const filtered = PROVIDERS.filter(p => {
+    if (p.paused) return false;  // Hide paused providers
     if (p.area !== selectedArea) return false;
     if (p.resto === 'ambos' || p.resto === null) return true;
     return p.resto === selectedResto;
@@ -3154,13 +3255,16 @@ function renderProveedoresList() {
   const el = document.getElementById('proveedoresList');
   if (!el) return;
   el.innerHTML = appProviders.map(p => `
-    <div class="prov-card">
+    <div class="prov-card ${p.paused ? 'paused' : ''}">
       <div class="prov-card-header">
         <div>
           <div class="prov-card-name">${p.name}</div>
           <div class="prov-card-contact">👤 ${p.contact || '-'} · 📱 ${p.whatsapp || '-'} · ${p.area === 'cocina' ? '🍳' : '🍷'} · ${p.resto === 'ambos' || !p.resto ? 'Ambos' : p.resto === 1 ? 'Ravatxol' : 'Tabalet'}</div>
         </div>
         <div class="prov-card-actions">
+          <button class="pause-toggle ${p.paused ? 'paused' : ''}" onclick="toggleProviderPause('${p.id}')" title="${p.paused ? 'Activar' : 'Pausar'}">
+            ${p.paused ? '▶️' : '⏸️'}
+          </button>
           <button class="prov-btn blue" onclick="openEditProvModal('${p.id}')">✏️</button>
           <button class="prov-btn red" onclick="deleteProvider('${p.id}')">🗑️</button>
         </div>
@@ -3170,12 +3274,18 @@ function renderProveedoresList() {
       </button>
       <div class="prov-products" id="prov-products-${p.id}">
         ${p.products.map(pr => `
-          <div class="prov-product-row">
+          <div class="prov-product-row" style="${pr.paused ? 'opacity:0.5' : ''}">
             <div class="prov-product-info">
-              <div class="prov-product-myname">${pr.name}</div>
-              <div class="prov-product-provname">→ ${pr.provName || pr.name} · ${pr.unit} · min:${pr.stockMin||0} max:${pr.stockMax||'-'}</div>
+              <div class="prov-product-myname">
+                ${pr.name}
+                ${pr.paused ? '<span style="color:var(--red);font-size:10px;font-weight:700;margin-left:4px">⏸️ PAUSADO</span>' : ''}
+                ${pr.priority === 'principal' ? '<span class="priority-badge principal">⭐ PRINCIPAL</span>' : pr.priority === 'alternativo' ? '<span class="priority-badge alternativo">✓ ALT</span>' : ''}
+              </div>
+              <div class="prov-product-provname">→ ${pr.provName || pr.name} · ${pr.unit}</div>
             </div>
             <div class="prov-product-actions">
+              <button class="prov-btn" style="font-size:9px" onclick="cycleProductPriority('${p.id}','${pr.id}')" title="Cambiar prioridad">${pr.priority === 'principal' ? '⭐' : pr.priority === 'alternativo' ? '✓' : '—'}</button>
+              <button class="pause-toggle ${pr.paused ? 'paused' : ''}" onclick="toggleProductPause('${p.id}','${pr.id}')">${pr.paused ? '▶️' : '⏸️'}</button>
               <button class="prov-btn blue" onclick="openEditProductModal('${p.id}','${pr.id}')">✏️</button>
               <button class="prov-btn red" onclick="deleteProduct('${p.id}','${pr.id}')">🗑️</button>
             </div>
@@ -4300,6 +4410,54 @@ async function uploadOrderImage(order) {
   }
 }
 
+
+// ─── PAUSE / PRIORITY FUNCTIONS ─────────────────────────
+function toggleProviderPause(provId) {
+  const prov = appProviders.find(p => p.id === provId);
+  if (!prov) return;
+  prov.paused = !prov.paused;
+  saveProviders();
+  if (typeof saveProvidersToCloud === 'function' && supabaseClient) {
+    saveProvidersToCloud(appProviders);
+  }
+  renderProveedoresList();
+  renderProviders();
+  showToast(prov.paused ? '⏸️ ' + prov.name + ' pausado' : '▶️ ' + prov.name + ' activado');
+}
+
+function toggleProductPause(provId, prodId) {
+  const prov = appProviders.find(p => p.id === provId);
+  if (!prov) return;
+  const prod = prov.products.find(p => p.id === prodId);
+  if (!prod) return;
+  prod.paused = !prod.paused;
+  saveProviders();
+  if (typeof saveProvidersToCloud === 'function' && supabaseClient) {
+    saveProvidersToCloud(appProviders);
+  }
+  renderProveedoresList();
+  renderProducts();
+  showToast(prod.paused ? '⏸️ ' + prod.name + ' pausado' : '▶️ ' + prod.name + ' activado');
+}
+
+function cycleProductPriority(provId, prodId) {
+  const prov = appProviders.find(p => p.id === provId);
+  if (!prov) return;
+  const prod = prov.products.find(p => p.id === prodId);
+  if (!prod) return;
+  // Cycle: none -> principal -> alternativo -> none
+  if (!prod.priority || prod.priority === '') prod.priority = 'principal';
+  else if (prod.priority === 'principal') prod.priority = 'alternativo';
+  else prod.priority = '';
+  
+  saveProviders();
+  if (typeof saveProvidersToCloud === 'function' && supabaseClient) {
+    saveProvidersToCloud(appProviders);
+  }
+  renderProveedoresList();
+  showToast(prod.priority === 'principal' ? '⭐ Marcado como principal' : prod.priority === 'alternativo' ? '✓ Marcado como alternativo' : 'Sin prioridad');
+}
+
 // ─── PRODUCCIONES ───────────────────────────────────────
 let prodItems = JSON.parse(localStorage.getItem('prodItems') || '[]');
 let prodMode = 'today';
@@ -4612,21 +4770,13 @@ function filterProductList() {
   
   if (!selectedProvider) return;
   
-  const filtered = selectedProvider.products.filter(p => {
-    if (!search) return true;
-    return p.name.toLowerCase().includes(search) ||
-           (p.provName && p.provName.toLowerCase().includes(search));
-  });
-  
   const el = document.getElementById('productList');
   const noFoundEl = document.getElementById('noProductFound');
   
-  if (filtered.length === 0 && search) {
-    el.innerHTML = '';
-    if (noFoundEl) noFoundEl.style.display = 'block';
-  } else {
+  // If no search, show only current provider's products (normal mode)
+  if (!search) {
     if (noFoundEl) noFoundEl.style.display = 'none';
-    el.innerHTML = filtered.map(pr => {
+    el.innerHTML = selectedProvider.products.map(pr => {
       const qty = quantities[pr.id] || 0;
       return `
         <div class="product-item">
@@ -4642,7 +4792,139 @@ function filterProductList() {
         </div>
       `;
     }).join('');
+    return;
   }
+  
+  // Auto-switch to provider if there's only one match in another provider
+  // (only when user just typed - check if all matches are in same provider)
+  
+  // SEARCH MODE: search in ALL providers (filtered by user permissions)
+  let availableProviders = PROVIDERS;
+  if (currentUser && !currentUser.isAdmin) {
+    availableProviders = PROVIDERS.filter(p => {
+      if (p.area !== currentUser.role) return false;
+      if (p.resto === 'ambos' || p.resto === null || p.resto === undefined) return true;
+      return p.resto === currentUser.resto;
+    });
+  } else {
+    // Admin: filter by current area and resto
+    availableProviders = PROVIDERS.filter(p => {
+      if (p.area !== selectedArea) return false;
+      if (p.resto === 'ambos' || p.resto === null || p.resto === undefined) return true;
+      return p.resto === selectedResto;
+    });
+  }
+  
+  // Collect matches across all providers (skip paused)
+  const matches = [];
+  availableProviders.forEach(prov => {
+    if (prov.paused) return;  // Skip paused providers
+    prov.products.forEach(p => {
+      if (p.paused) return;  // Skip paused products
+      if (p.name.toLowerCase().includes(search) ||
+          (p.provName && p.provName.toLowerCase().includes(search))) {
+        matches.push({ product: p, provider: prov });
+      }
+    });
+  });
+  // Sort: principal first, then alternativo, then none
+  matches.sort((a, b) => {
+    const order = { principal: 0, alternativo: 1, '': 2 };
+    const aOrder = order[a.product.priority || ''] || 2;
+    const bOrder = order[b.product.priority || ''] || 2;
+    return aOrder - bOrder;
+  });
+  
+  if (matches.length === 0) {
+    el.innerHTML = '';
+    if (noFoundEl) noFoundEl.style.display = 'block';
+    return;
+  }
+  
+  if (noFoundEl) noFoundEl.style.display = 'none';
+  
+  // Group by product name to show multiple options
+  const byName = {};
+  matches.forEach(m => {
+    const key = m.product.name.toLowerCase();
+    if (!byName[key]) byName[key] = [];
+    byName[key].push(m);
+  });
+  
+  // Render
+  let html = '';
+  Object.keys(byName).forEach(name => {
+    const items = byName[name];
+    if (items.length === 1) {
+      // Single match: auto-switch to that provider
+      const m = items[0];
+      const pr = m.product;
+      const qty = quantities[pr.id] || 0;
+      const isCurrentProv = m.provider.id === selectedProvider.id;
+      
+      // Auto-switch provider if not current
+      if (!isCurrentProv) {
+        selectedProvider = m.provider;
+        renderProviders();
+      }
+      
+      html += `
+        <div class="product-item" style="border-left:3px solid var(--accent)">
+          <div class="product-info">
+            <div class="product-name">${pr.name}</div>
+            <div class="product-unit" style="font-size:11px">
+              ${pr.provName ? '→ ' + pr.provName + ' · ' : ''}${pr.unit}
+              <br><span style="color:var(--accent);font-weight:700">📦 ${m.provider.name}</span>
+            </div>
+          </div>
+          <div class="qty-control">
+            <button class="qty-btn" onclick="changeQty('${pr.id}', -1)">−</button>
+            <div class="qty-num" id="qty-${pr.id}">${qty}</div>
+            <button class="qty-btn plus" onclick="changeQty('${pr.id}', 1)">+</button>
+          </div>
+        </div>
+      `;
+    } else {
+      // Multiple providers for same product name
+      html += `<div style="font-family:'Syne',sans-serif;font-weight:700;font-size:12px;color:var(--accent);margin:12px 0 6px;padding:6px 10px;background:rgba(255,107,43,0.08);border-radius:8px">📌 ${items[0].product.name} · disponible en ${items.length} proveedores</div>`;
+      items.forEach(m => {
+        const pr = m.product;
+        const qty = quantities[pr.id] || 0;
+        const isCurrentProv = m.provider.id === selectedProvider.id;
+        html += `
+          <div class="product-item" style="${!isCurrentProv ? 'border-left:3px solid var(--blue)' : 'border-left:3px solid var(--accent)'}">
+            <div class="product-info">
+              <div class="product-name" style="font-size:13px">${m.provider.name}</div>
+              <div class="product-unit" style="font-size:11px">
+                ${pr.provName ? '→ ' + pr.provName + ' · ' : ''}${pr.unit}
+                ${!isCurrentProv ? ` · <button onclick="switchToProvider('${m.provider.id}')" style="background:var(--blue);color:white;border:none;border-radius:6px;padding:2px 8px;font-size:10px;cursor:pointer">Ir aquí</button>` : '<span style="color:var(--accent);font-weight:700"> · actual</span>'}
+              </div>
+            </div>
+            <div class="qty-control">
+              <button class="qty-btn" onclick="changeQty('${pr.id}', -1)">−</button>
+              <div class="qty-num" id="qty-${pr.id}">${qty}</div>
+              <button class="qty-btn plus" onclick="changeQty('${pr.id}', 1)">+</button>
+            </div>
+          </div>
+        `;
+      });
+    }
+  });
+  
+  el.innerHTML = html;
+}
+
+function switchToProvider(provId) {
+  const newProv = PROVIDERS.find(p => p.id === provId);
+  if (!newProv) return;
+  selectedProvider = newProv;
+  // Clear search to show all products of new provider
+  const searchEl = document.getElementById('productSearch');
+  if (searchEl) searchEl.value = '';
+  renderProviders();
+  renderProducts();
+  filterProductList();
+  showToast('📦 Cambiado a ' + newProv.name);
 }
 
 function openRequestProductModal() {
@@ -5463,7 +5745,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '7.0.0'; // Increment this with each update
+const APP_VERSION = '7.3.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
