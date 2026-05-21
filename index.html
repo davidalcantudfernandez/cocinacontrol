@@ -2579,10 +2579,22 @@ function selectProvider(id) {
 // ─── PRODUCTS ────────────────────────────────────────────
 function renderProducts() {
   const el = document.getElementById('productList');
-  el.innerHTML = selectedProvider.products.map(pr => `
+  if (!el || !selectedProvider) return;
+  // Filter out paused products
+  const activeProducts = selectedProvider.products.filter(p => !p.paused);
+  
+  // Sort by priority: principal first, then alternativo, then no priority
+  activeProducts.sort((a, b) => {
+    const order = { principal: 0, alternativo: 1, '': 2 };
+    const aOrder = order[a.priority || ''] || 2;
+    const bOrder = order[b.priority || ''] || 2;
+    return aOrder - bOrder;
+  });
+  
+  el.innerHTML = activeProducts.map(pr => `
     <div class="product-item">
       <div class="product-info">
-        <div class="product-name">${pr.name}</div>
+        <div class="product-name">${pr.name}${pr.priority === 'principal' ? ' <span class="priority-badge principal">⭐</span>' : pr.priority === 'alternativo' ? ' <span class="priority-badge alternativo">✓ ALT</span>' : ''}</div>
         <div class="product-unit" style="font-size:11px">${pr.provName ? '→ ' + pr.provName + ' · ' : ''}${pr.unit}</div>
       </div>
       <div class="qty-control">
@@ -5745,7 +5757,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '7.3.0'; // Increment this with each update
+const APP_VERSION = '7.4.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
