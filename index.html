@@ -5431,7 +5431,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '6.8.0'; // Increment this with each update
+const APP_VERSION = '6.9.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
@@ -5453,6 +5453,12 @@ function checkVersion() {
     }
   }
 }
+
+// Set version label
+window.addEventListener('DOMContentLoaded', () => {
+  const label = document.getElementById('versionLabel');
+  if (label) label.textContent = 'v' + APP_VERSION;
+});
 
 // Check version on load
 checkVersion();
