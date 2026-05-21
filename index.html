@@ -1844,6 +1844,14 @@ function generatePDF(orderId, retries) {
       </select>
     </div>
     <div class="form-row">
+      <label class="form-label">Disponible en</label>
+      <select class="form-select" id="prod-resto">
+        <option value="ambos">🏠🏡 Ambos locales</option>
+        <option value="1">🏠 Solo Ravatxol</option>
+        <option value="2">🏡 Solo Tabalet</option>
+      </select>
+    </div>
+    <div class="form-row">
       <label class="form-label">Stock mínimo</label>
       <input class="form-input" id="prod-min" type="number" placeholder="0" />
     </div>
@@ -2580,8 +2588,13 @@ function selectProvider(id) {
 function renderProducts() {
   const el = document.getElementById('productList');
   if (!el || !selectedProvider) return;
-  // Filter out paused products
-  const activeProducts = selectedProvider.products.filter(p => !p.paused);
+  // Filter out paused products and filter by current restaurant
+  const activeProducts = selectedProvider.products.filter(p => {
+    if (p.paused) return false;
+    // If product has specific resto, only show in that resto
+    if (p.resto && p.resto !== 'ambos' && p.resto !== selectedResto) return false;
+    return true;
+  });
   
   // Sort by priority: principal first, then alternativo, then no priority
   activeProducts.sort((a, b) => {
@@ -3293,7 +3306,7 @@ function renderProveedoresList() {
                 ${pr.paused ? '<span style="color:var(--red);font-size:10px;font-weight:700;margin-left:4px">⏸️ PAUSADO</span>' : ''}
                 ${pr.priority === 'principal' ? '<span class="priority-badge principal">⭐ PRINCIPAL</span>' : pr.priority === 'alternativo' ? '<span class="priority-badge alternativo">✓ ALT</span>' : ''}
               </div>
-              <div class="prov-product-provname">→ ${pr.provName || pr.name} · ${pr.unit}</div>
+              <div class="prov-product-provname">→ ${pr.provName || pr.name} · ${pr.unit} · ${pr.resto === 1 ? '🏠 Ravatxol' : pr.resto === 2 ? '🏡 Tabalet' : '🏠🏡 Ambos'}</div>
             </div>
             <div class="prov-product-actions">
               <button class="prov-btn" style="font-size:9px" onclick="cycleProductPriority('${p.id}','${pr.id}')" title="Cambiar prioridad">${pr.priority === 'principal' ? '⭐' : pr.priority === 'alternativo' ? '✓' : '—'}</button>
@@ -3396,6 +3409,7 @@ function openNewProductModal(provId) {
   document.getElementById('prod-unit').value = 'kg';
   document.getElementById('prod-min').value = '';
   document.getElementById('prod-max').value = '';
+  document.getElementById('prod-resto').value = 'ambos';
   fillProviderSelect(provId);
   document.getElementById('productModal').classList.add('open');
 }
@@ -3412,6 +3426,9 @@ function openEditProductModal(provId, prodId) {
   document.getElementById('prod-unit').value = prod.unit || 'kg';
   document.getElementById('prod-min').value = prod.stockMin || '';
   document.getElementById('prod-max').value = prod.stockMax || '';
+  // Set restaurant
+  const restoVal = prod.resto === 1 ? '1' : prod.resto === 2 ? '2' : 'ambos';
+  document.getElementById('prod-resto').value = restoVal;
   fillProviderSelect(provId);
   document.getElementById('productModal').classList.add('open');
 }
@@ -3438,6 +3455,8 @@ function saveProduct() {
   const unit = document.getElementById('prod-unit').value;
   const min = parseInt(document.getElementById('prod-min').value) || 0;
   const max = parseInt(document.getElementById('prod-max').value) || 0;
+  const restoVal = document.getElementById('prod-resto').value;
+  const resto = restoVal === '1' ? 1 : restoVal === '2' ? 2 : 'ambos';
 
   if (!myname) { showToast('⚠️ El nombre es obligatorio', '#e05252'); return; }
 
@@ -3447,7 +3466,7 @@ function saveProduct() {
     const prod = origProv && origProv.products.find(p => p.id === prodId);
     if (prod) {
       prod.name = myname; prod.provName = provname; prod.unit = unit;
-      prod.stockMin = min; prod.stockMax = max;
+      prod.stockMin = min; prod.stockMax = max; prod.resto = resto;
       // Move to different provider if changed
       if (newProvId !== origProvId) {
         origProv.products = origProv.products.filter(p => p.id !== prodId);
@@ -3463,7 +3482,7 @@ function saveProduct() {
     if (prov) {
       prov.products.push({
         id: 'prod_' + Date.now(), name: myname, provName: provname,
-        unit, stockMin: min, stockMax: max, stockActual: max || min
+        unit, stockMin: min, stockMax: max, stockActual: max || min, resto: resto
       });
       showToast('✅ Producto añadido');
     }
@@ -4827,12 +4846,15 @@ function filterProductList() {
     });
   }
   
-  // Collect matches across all providers (skip paused)
+  // Collect matches across all providers (skip paused and wrong resto)
   const matches = [];
+  const userResto = (currentUser && !currentUser.isAdmin) ? currentUser.resto : selectedResto;
   availableProviders.forEach(prov => {
-    if (prov.paused) return;  // Skip paused providers
+    if (prov.paused) return;
     prov.products.forEach(p => {
-      if (p.paused) return;  // Skip paused products
+      if (p.paused) return;
+      // Filter by product restaurant
+      if (p.resto && p.resto !== 'ambos' && p.resto !== userResto) return;
       if (p.name.toLowerCase().includes(search) ||
           (p.provName && p.provName.toLowerCase().includes(search))) {
         matches.push({ product: p, provider: prov });
@@ -5757,7 +5779,7 @@ window.addEventListener('load', loadSupabase);
 
 <script>
 // AUTO-UPDATE SYSTEM
-const APP_VERSION = '7.4.0'; // Increment this with each update
+const APP_VERSION = '7.5.0'; // Increment this with each update
 const STORAGE_VERSION_KEY = 'cocinacontrol_version';
 
 function checkVersion() {
